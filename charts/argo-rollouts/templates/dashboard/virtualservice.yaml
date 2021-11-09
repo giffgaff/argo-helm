@@ -1,0 +1,19 @@
+{{- if .Values.dashboard.enabled -}}
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ include "argo-rollouts.fullname" . }}-dashboard
+  labels:
+    {{- include "argo-rollouts.labels" . | nindent 4 }}
+spec:
+  gateways:
+  {{- range $hosts := .Values.dashboard.virtualservice.gateways }}
+  - {{ $hosts }}
+  {{- end }}
+  hosts:
+  - {{ .Values.dashboard.virtualservice.hostname }}
+  http:
+  - route:
+    - destination:
+        host: {{ include "argo-rollouts.fullname" . }}-dashboard
+  {{- end }}

@@ -6,7 +6,6 @@ metadata:
 spec:
   args:
   - name: metrics-interval
-    value: testing
   - name: success-condition
   - name: failure-limit
   - name: service-name
@@ -14,8 +13,8 @@ spec:
   metrics:
   - name: 500-errors
     interval: "{{`{{`}}args.metrics-interval{{`}}`}}"
-    successCondition: "{{`{{`}}args.metrics-interval{{`}}`}}"
-    failureLimit: "{{`{{`}}args.metrics-interval{{`}}`}}"
+    successCondition: "{{`{{`}}args.success-condition{{`}}`}}"
+    failureLimit: "{{`{{`}}args.failure-limit{{`}}`}}"
     provider:
       prometheus:
         address: http://thanos-query-http.monitoring:10902

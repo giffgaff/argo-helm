@@ -4,6 +4,12 @@ kind: ClusterAnalysisTemplate
 metadata:
   name: 500-errors
 spec:
+  args:
+  - name: metrics-interval
+  - name: success-condition
+  - name: failure-limit
+  - name: service-name
+  - name: query-interval
   metrics:
   - name: 500-errors
     interval: "{{args.metrics-interval}}"

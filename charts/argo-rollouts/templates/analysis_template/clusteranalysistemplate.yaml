@@ -1,4 +1,4 @@
-{{- if .Values.cluster_analysis_template.enabled -}}
+{{- if .Values.cluster_analysis_template -}}
 apiVersion: argoproj.io/v1alpha1
 kind: ClusterAnalysisTemplate
 metadata:
@@ -6,21 +6,22 @@ metadata:
 spec:
   args:
   - name: metrics-interval
+    value: testing
   - name: success-condition
   - name: failure-limit
   - name: service-name
   - name: query-interval
   metrics:
   - name: 500-errors
-    interval: "{{args.metrics-interval}}"
-    successCondition: "{{args.success-condition}}"
-    failureLimit: "{{args.failure-limit}}"
+    interval: "{{`{{`}}args.metrics-interval{{`}}`}}"
+    successCondition: "{{`{{`}}args.metrics-interval{{`}}`}}"
+    failureLimit: "{{`{{`}}args.metrics-interval{{`}}`}}"
     provider:
       prometheus:
         address: http://thanos-query-http.monitoring:10902
         query: |
-          (sum(rate(istio_requests_total{reporter="source", destination_service_name=~"{{args.service-name}}", response_code=~"5.."}[{{args.query-interval}}]))
-          / sum(rate(istio_requests_total{reporter="source", destination_service_name=~"{{args.service-name}}"}[{{args.query-interval}}])))*100
+          (sum(rate(istio_requests_total{reporter="source", destination_service_name=~"{{`{{`}}args.service-name{{`}}`}}", response_code=~"5.."}[{{`{{`}}args.query-interval{{`}}`}}]))
+          / sum(rate(istio_requests_total{reporter="source", destination_service_name=~"{{`{{`}}args.service-name{{`}}`}}"}[{{`{{`}}args.query-interval{{`}}`}}])))*100
   {{- end }}
 
 

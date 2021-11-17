@@ -19,8 +19,8 @@ spec:
       prometheus:
         address: http://thanos-query-http.monitoring:10902
         query: |
-          (sum(rate(istio_requests_total{destination_service_name=~"{{`{{`}}args.service-name{{`}}`}}", response_code=~"5.."}[{{`{{`}}args.query-interval{{`}}`}}]))
-          / sum(rate(istio_requests_total{destination_service_name=~"{{`{{`}}args.service-name{{`}}`}}"}[{{`{{`}}args.query-interval{{`}}`}}])))*100 OR on() vector(0)
+          (sum(rate(istio_requests_total{reporter="destination", destination_service_name=~"{{`{{`}}args.service-name{{`}}`}}", response_code=~"5.."}[{{`{{`}}args.query-interval{{`}}`}}]))
+          / sum(rate(istio_requests_total{reporter="destination", destination_service_name=~"{{`{{`}}args.service-name{{`}}`}}"}[{{`{{`}}args.query-interval{{`}}`}}])))*100 OR on() vector(0)
   {{- end }}
 
 

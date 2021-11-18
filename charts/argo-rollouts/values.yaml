@@ -7,6 +7,136 @@ controller:
   notifications:
     enabled: true
     slack-token: $slack-token
+    templates:
+      rolloutCompleted: |
+        message: Rollout {{.rollout.metadata.name}} has been completed.
+        email:
+          subject: Rollout {{.rollout.metadata.name}} has been completed.
+        slack:
+          attachments: |
+              [{
+                "title": "{{ .rollout.metadata.name}}",
+                "color": "#18be52",
+                "fields": [
+                {
+                  "title": "Strategy",
+                  "value": "{{if .rollout.spec.strategy.blueGreen}}BlueGreen{{end}}{{if .rollout.spec.strategy.canary}}Canary{{end}}",
+                  "short": true
+                }
+                {{range $index, $c := .rollout.spec.template.spec.containers}}
+                  {{if not $index}},{{end}}
+                  {{if $index}},{{end}}
+                  {
+                    "title": "{{$c.name}}",
+                    "value": "{{$c.image}}",
+                    "short": true
+                  }
+                {{end}}
+                ]
+              }]
+
+      rolloutStepCompleted: |
+        message: Rollout {{.rollout.metadata.name}} step number {{ add .rollout.status.currentStepIndex 1}}/{{len .rollout.spec.strategy.canary.steps}} has been completed.
+        email:
+          subject: Rollout {{.rollout.metadata.name}} step number {{ add .rollout.status.currentStepIndex 1}}/{{len .rollout.spec.strategy.canary.steps}} has been completed.
+        slack:
+          attachments: |
+              [{
+                "title": "{{ .rollout.metadata.name}}",
+                "color": "#18be52",
+                "fields": [
+                {
+                  "title": "Strategy",
+                  "value": "{{if .rollout.spec.strategy.blueGreen}}BlueGreen{{end}}{{if .rollout.spec.strategy.canary}}Canary{{end}}",
+                  "short": true
+                },
+                {
+                  "title": "Step completed",
+                  "value": "{{add .rollout.status.currentStepIndex 1}}/{{len .rollout.spec.strategy.canary.steps}}",
+                  "short": true
+                }
+                {{range $index, $c := .rollout.spec.template.spec.containers}}
+                  {{if not $index}},{{end}}
+                  {{if $index}},{{end}}
+                  {
+                    "title": "{{$c.name}}",
+                    "value": "{{$c.image}}",
+                    "short": true
+                  }
+                {{end}}
+                ]
+              }]
+      rolloutUpdated: |
+        message: Rollout {{.rollout.metadata.name}} has been updated.
+        email:
+          subject: Rollout {{.rollout.metadata.name}} has been updated.
+        slack:
+          attachments: |
+              [{
+                "title": "{{ .rollout.metadata.name}}",
+                "color": "#18be52",
+                "fields": [
+                {
+                  "title": "Strategy",
+                  "value": "{{if .rollout.spec.strategy.blueGreen}}BlueGreen{{end}}{{if .rollout.spec.strategy.canary}}Canary{{end}}",
+                  "short": true
+                }
+                {{range $index, $c := .rollout.spec.template.spec.containers}}
+                  {{if not $index}},{{end}}
+                  {{if $index}},{{end}}
+                  {
+                    "title": "{{$c.name}}",
+                    "value": "{{$c.image}}",
+                    "short": true
+                  }
+                {{end}}
+                ]
+              }]
+      scalingReplicaset: |
+        message: Scaling Rollout {{.rollout.metadata.name}}'s replicaset to {{.rollout.spec.replicas}}.
+        email:
+          subject: Scaling Rollout {{.rollout.metadata.name}}'s replcaset to {{.rollout.spec.replicas}}.
+        slack:
+          attachments: |
+              [{
+                "title": "{{ .rollout.metadata.name}}",
+                "color": "#18be52",
+                "fields": [
+                {
+                  "title": "Strategy",
+                  "value": "{{if .rollout.spec.strategy.blueGreen}}BlueGreen{{end}}{{if .rollout.spec.strategy.canary}}Canary{{end}}",
+                  "short": true
+                },
+                {
+                  "title": "Desired replica",
+                  "value": "{{.rollout.spec.replicas}}",
+                  "short": true
+                },
+                {
+                  "title": "Updated replicas",
+                  "value": "{{.rollout.status.updatedReplicas}}",
+                  "short": true
+                }
+                {{range $index, $c := .rollout.spec.template.spec.containers}}
+                  {{if not $index}},{{end}}
+                  {{if $index}},{{end}}
+                  {
+                    "title": "{{$c.name}}",
+                    "value": "{{$c.image}}",
+                    "short": true
+                  }
+                {{end}}
+                ]
+              }]
+      triggerOnRolloutCompleted: |
+        - send: [rollout-completed]
+      triggerOnRolloutStepCompleted: |
+        - send: [rollout-step-completed]
+      triggerOnRolloutUpdated: |
+        - send: [rollout-updated]
+      triggerOnScalingReplicaset: |
+        - send: [scaling-replicaset]
+
   component: rollouts-controller
   ## Node selectors and tolerations for server scheduling to nodes with taints
   ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/

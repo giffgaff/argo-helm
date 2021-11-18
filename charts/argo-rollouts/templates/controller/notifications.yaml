@@ -11,14 +11,14 @@ metadata:
   name: argo-rollouts-notification-configmap
   namespace: argo
 data:
-  templates.rollout-completed: {{ toJson .Values.controller.notifications.templates.rolloutCompleted }}
-  templates.rollout-step-completed: {{ toJson .Values.controller.notifications.templates.rolloutStepCompleted }}
-  templates.rollout-updated: {{ toJson .Values.controller.notifications.templates.rolloutUpdated }}
+  template.rollout-completed: {{ toJson .Values.controller.notifications.templates.rolloutCompleted }}
+  template.rollout-step-completed: {{ toJson .Values.controller.notifications.templates.rolloutStepCompleted }}
+  template.rollout-updated: {{ toJson .Values.controller.notifications.templates.rolloutUpdated }}
   template.scaling-replicaset: {{ toJson .Values.controller.notifications.templates.scalingReplicaset }}
   trigger.on-rollout-completed: {{ toJson .Values.controller.notifications.templates.triggerOnRolloutCompleted }}
   trigger.on-rollout-step-completed: {{ toJson .Values.controller.notifications.templates.triggerOnRolloutStepCompleted }}
   trigger.on-rollout-updated: {{ toJson .Values.controller.notifications.templates.triggerOnRolloutUpdated }}
-  trigger.on-scaling-replicaset: {{ toJson .Values.controller.notifications.templates.triggerOnScalingReplicaset }}
+  trigger.on-scaling-replica-set: {{ toJson .Values.controller.notifications.templates.triggerOnScalingReplicaset }}
   service.slack: |
     token: {{ .Values.controller.notifications.slack_token }}
 

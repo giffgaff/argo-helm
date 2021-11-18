@@ -13,7 +13,7 @@ metadata:
 data:
     templates.rollout-completed: {{ toJson .Values.controller.notifications.templates.rolloutCompleted }}
     templates.rollout-step-completed: {{ toJson .Values.controller.notifications.templates.rolloutStepCompleted }}
-    templates.rollout-updated: {{ toJson .Values.controller.notifications.templates.rolloutpdated }}
+    templates.rollout-updated: {{ toJson .Values.controller.notifications.templates.rolloutUpdated }}
     template.scaling-replicaset: {{ toJson .Values.controller.notifications.templates.scalingReplicaset }}
     trigger.on.rollout-completed: {{ toJson .Values.controller.notifications.templates.triggerOnRolloutCompleted }}
     trigger.on.rollout-step-completed: {{ toJson .Values.controller.notifications.templates.triggerOnRolloutStepCompleted }}

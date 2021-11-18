@@ -6,7 +6,7 @@ clusterInstall: true
 controller:
   notifications:
     enabled: true
-    slack-token: thisIsNotTheToken
+    slackToken: $slack-token
     templates:
       rolloutCompleted: |
         message: Rollout {{.rollout.metadata.name}} has been completed.

@@ -20,6 +20,6 @@ data:
   trigger.on-rollout-updated: {{ toJson .Values.controller.notifications.templates.triggerOnRolloutUpdated }}
   trigger.on-scaling-replica-set: {{ toJson .Values.controller.notifications.templates.triggerOnScalingReplicaset }}
   service.slack: |
-    token: {{ .Values.controller.notifications.slack_token }}
+    token: {{ .Values.controller.notifications.slackToken }}
 
 {{- end }}

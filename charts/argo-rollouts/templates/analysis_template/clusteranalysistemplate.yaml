@@ -3,8 +3,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: ClusterAnalysisTemplate
 metadata:
   name: 500-errors
-  annotations:
-    "helm.sh/hook": "post-install"
 spec:
   args:
   - name: metrics-interval

@@ -73,12 +73,9 @@ controller:
           attachments: |
               [{
                 "title": "{{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}",
+                "title_link": "https://jenkins.gaff.systems/job/{{.rollout.metadata.namespace}}/job/{{.rollout.spec.strategy.canary.stableService}}-service/job/{{.rollout.spec.strategy.canary.stableService}}-deploy/",
                 "color": "#18be52",
                 "fields": [
-                {
-                  "title": "Jenkins Job Link",
-                  "title_link": "https://jenkins.gaff.systems/job/{{.rollout.metadata.namespace}}/job/{{.rollout.spec.strategy.canary.stableService}}-service/job/{{.rollout.spec.strategy.canary.stableService}}-deploy/",
-                },
                 {
                   "title": "Strategy",
                   "value": "{{if .rollout.spec.strategy.blueGreen}}BlueGreen{{end}}{{if .rollout.spec.strategy.canary}}Canary{{end}}",

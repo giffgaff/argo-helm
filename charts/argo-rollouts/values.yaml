@@ -10,8 +10,6 @@ controller:
     templates:
       rolloutCompleted: |
         message: Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}} has been completed.
-        email:
-          subject: Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}} has been completed.
         slack:
           attachments: |
               [{
@@ -37,8 +35,6 @@ controller:
 
       rolloutStepCompleted: |
         message: Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}} step number {{ add .rollout.status.currentStepIndex 1}}/{{len .rollout.spec.strategy.canary.steps}} has been completed.
-        email:
-          subject: Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}} step number {{ add .rollout.status.currentStepIndex 1}}/{{len .rollout.spec.strategy.canary.steps}} has been completed.
         slack:
           attachments: |
               [{
@@ -68,8 +64,6 @@ controller:
               }]
       rolloutUpdated: |
         message: Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}} has been updated.
-        email:
-          subject: Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}} has been updated.
         slack:
           attachments: |
               [{
@@ -94,8 +88,6 @@ controller:
               }]
       scalingReplicaset: |
         message: Scaling Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}'s replicaset to {{.rollout.spec.replicas}}.
-        email:
-          subject: Scaling Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}'s replicaset to {{.rollout.spec.replicas}}.
         slack:
           attachments: |
               [{
@@ -129,33 +121,29 @@ controller:
                 ]
               }]
       rolloutAborted: |
-        {{`
-          message: Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}} has been ABORTED.
-          email:
-            subject: Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}} has been ABORTED.
-          slack:
-            attachments: |
-                [{
-                  "title": "{{.rollout.metadata.namespace}}/{{ .rollout.metadata.name}}",
-                  "color": "#d61317",
-                  "fields": [
+        message: Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}} has been updated.
+        slack:
+          attachments: |
+              [{
+                "title": "{{ .rollout.metadata.name}}",
+                "color": "#d61317",
+                "fields": [
+                {
+                  "title": "Strategy",
+                  "value": "{{if .rollout.spec.strategy.blueGreen}}BlueGreen{{end}}{{if .rollout.spec.strategy.canary}}Canary{{end}}",
+                  "short": true
+                }
+                {{range $index, $c := .rollout.spec.template.spec.containers}}
+                  {{if not $index}},{{end}}
+                  {{if $index}},{{end}}
                   {
-                    "title": "Strategy",
-                    "value": "{{if .rollout.spec.strategy.blueGreen}}BlueGreen{{end}}{{if .rollout.spec.strategy.canary}}Canary{{end}}",
+                    "title": "{{$c.name}}",
+                    "value": "{{$c.image}}",
                     "short": true
                   }
-                  {{range $index, $c := .rollout.spec.template.spec.containers}}
-                    {{if not $index}},{{end}}
-                    {{if $index}},{{end}}
-                    {
-                      "title": "{{$c.name}}",
-                      "value": "{{$c.image}}",
-                      "short": true
-                    }
-                  {{end}}
-                  ]
-                }]
-          `}}
+                {{end}}
+                ]
+              }]
       triggerOnRolloutCompleted: |
         - send: [rollout-completed]
       triggerOnRolloutStepCompleted: |

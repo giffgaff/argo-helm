@@ -9,9 +9,9 @@ controller:
     slackToken: "$slack-token"
     templates:
       rolloutCompleted: |
-        message: Rollout {{.rollout.metadata.name}} has been completed.
+        message: Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}} has been completed.
         email:
-          subject: Rollout {{.rollout.metadata.name}} has been completed.
+          subject: Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}} has been completed.
         slack:
           attachments: |
               [{
@@ -36,9 +36,9 @@ controller:
               }]
 
       rolloutStepCompleted: |
-        message: Rollout {{.rollout.metadata.name}} step number {{ add .rollout.status.currentStepIndex 1}}/{{len .rollout.spec.strategy.canary.steps}} has been completed.
+        message: Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}} step number {{ add .rollout.status.currentStepIndex 1}}/{{len .rollout.spec.strategy.canary.steps}} has been completed.
         email:
-          subject: Rollout {{.rollout.metadata.name}} step number {{ add .rollout.status.currentStepIndex 1}}/{{len .rollout.spec.strategy.canary.steps}} has been completed.
+          subject: Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}} step number {{ add .rollout.status.currentStepIndex 1}}/{{len .rollout.spec.strategy.canary.steps}} has been completed.
         slack:
           attachments: |
               [{
@@ -67,9 +67,9 @@ controller:
                 ]
               }]
       rolloutUpdated: |
-        message: Rollout {{.rollout.metadata.name}} has been updated.
+        message: Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}} has been updated.
         email:
-          subject: Rollout {{.rollout.metadata.name}} has been updated.
+          subject: Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}} has been updated.
         slack:
           attachments: |
               [{
@@ -93,9 +93,9 @@ controller:
                 ]
               }]
       scalingReplicaset: |
-        message: Scaling Rollout {{.rollout.metadata.name}}'s replicaset to {{.rollout.spec.replicas}}.
+        message: Scaling Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}'s replicaset to {{.rollout.spec.replicas}}.
         email:
-          subject: Scaling Rollout {{.rollout.metadata.name}}'s replcaset to {{.rollout.spec.replicas}}.
+          subject: Scaling Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}'s replicaset to {{.rollout.spec.replicas}}.
         slack:
           attachments: |
               [{
@@ -128,6 +128,34 @@ controller:
                 {{end}}
                 ]
               }]
+      rolloutAborted: |
+        {{`
+          message: Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}} has been ABORTED.
+          email:
+            subject: Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}} has been ABORTED.
+          slack:
+            attachments: |
+                [{
+                  "title": "{{.rollout.metadata.namespace}}/{{ .rollout.metadata.name}}",
+                  "color": "#d61317",
+                  "fields": [
+                  {
+                    "title": "Strategy",
+                    "value": "{{if .rollout.spec.strategy.blueGreen}}BlueGreen{{end}}{{if .rollout.spec.strategy.canary}}Canary{{end}}",
+                    "short": true
+                  }
+                  {{range $index, $c := .rollout.spec.template.spec.containers}}
+                    {{if not $index}},{{end}}
+                    {{if $index}},{{end}}
+                    {
+                      "title": "{{$c.name}}",
+                      "value": "{{$c.image}}",
+                      "short": true
+                    }
+                  {{end}}
+                  ]
+                }]
+          `}}
       triggerOnRolloutCompleted: |
         - send: [rollout-completed]
       triggerOnRolloutStepCompleted: |
@@ -136,6 +164,8 @@ controller:
         - send: [rollout-updated]
       triggerOnScalingReplicaset: |
         - send: [scaling-replicaset]
+      triggerOnRolloutAborted: |
+        - send: [rollout-aborted]
 
   component: rollouts-controller
   ## Node selectors and tolerations for server scheduling to nodes with taints

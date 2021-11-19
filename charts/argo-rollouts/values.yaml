@@ -9,11 +9,11 @@ controller:
     slackToken: "$slack-token"
     templates:
       rolloutCompleted: |
-        message: Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}} has been completed.
+        message: Rollout Completed.
         slack:
           attachments: |
               [{
-                "title": "{{ .rollout.metadata.name}}",
+                "title": "{{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}",
                 "color": "#18be52",
                 "fields": [
                 {
@@ -34,11 +34,11 @@ controller:
               }]
 
       rolloutStepCompleted: |
-        message: Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}} step number {{ add .rollout.status.currentStepIndex 1}}/{{len .rollout.spec.strategy.canary.steps}} has been completed.
+        message: Rollout Step Completed.
         slack:
           attachments: |
               [{
-                "title": "{{ .rollout.metadata.name}}",
+                "title": "{{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}",
                 "color": "#18be52",
                 "fields": [
                 {
@@ -49,6 +49,11 @@ controller:
                 {
                   "title": "Step completed",
                   "value": "{{add .rollout.status.currentStepIndex 1}}/{{len .rollout.spec.strategy.canary.steps}}",
+                  "short": true
+                },
+                {
+                  "title": "Weight completed",
+                  "value": "Stable: {{.rollout.status.canary.weights.stable.weight}}% | Canary: {{.rollout.status.canary.weights.canary.weight}}% ",
                   "short": true
                 }
                 {{range $index, $c := .rollout.spec.template.spec.containers}}
@@ -63,11 +68,11 @@ controller:
                 ]
               }]
       rolloutUpdated: |
-        message: Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}} has been updated.
+        message: Rollout Updated.
         slack:
           attachments: |
               [{
-                "title": "{{ .rollout.metadata.name}}",
+                "title": "{{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}",
                 "color": "#18be52",
                 "fields": [
                 {
@@ -87,11 +92,11 @@ controller:
                 ]
               }]
       scalingReplicaset: |
-        message: Scaling Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}'s replicaset to {{.rollout.spec.replicas}}.
+        message: Scaling Rollout Replicaset.
         slack:
           attachments: |
               [{
-                "title": "{{ .rollout.metadata.name}}",
+                "title": "{{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}",
                 "color": "#18be52",
                 "fields": [
                 {
@@ -121,11 +126,11 @@ controller:
                 ]
               }]
       rolloutAborted: |
-        message: Rollout {{.rollout.metadata.namespace}}/{{.rollout.metadata.name}} has been updated.
+        message: Rollout Aborted.
         slack:
           attachments: |
               [{
-                "title": "{{ .rollout.metadata.name}}",
+                "title": "{{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}",
                 "color": "#d61317",
                 "fields": [
                 {

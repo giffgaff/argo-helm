@@ -9,11 +9,12 @@ controller:
     slackToken: "$slack-token"
     templates:
       rolloutCompleted: |
-        message: Rollout Completed.
+        message: Rollout Started.
         slack:
           attachments: |
               [{
                 "title": "{{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}",
+                "title_link": "https://jenkins.gaff.systems/job/{{.rollout.metadata.namespace}}/job/{{.rollout.metadata.name}}-service/job/{{.rollout.metadata.name}}-deploy/",
                 "color": "#18be52",
                 "fields": [
                 {

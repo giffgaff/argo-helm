@@ -12,14 +12,10 @@ metadata:
   namespace: argo
 data:
   template.rollout-completed: {{ toJson .Values.controller.notifications.templates.rolloutCompleted }}
-  template.rollout-step-completed: {{ toJson .Values.controller.notifications.templates.rolloutStepCompleted }}
   template.rollout-updated: {{ toJson .Values.controller.notifications.templates.rolloutUpdated }}
-  template.scaling-replicaset: {{ toJson .Values.controller.notifications.templates.scalingReplicaset }}
   template.rollout-aborted: {{ toJson .Values.controller.notifications.templates.rolloutAborted }}
   trigger.on-rollout-completed: {{ toJson .Values.controller.notifications.templates.triggerOnRolloutCompleted }}
-  trigger.on-rollout-step-completed: {{ toJson .Values.controller.notifications.templates.triggerOnRolloutStepCompleted }}
   trigger.on-rollout-updated: {{ toJson .Values.controller.notifications.templates.triggerOnRolloutUpdated }}
-  trigger.on-scaling-replica-set: {{ toJson .Values.controller.notifications.templates.triggerOnScalingReplicaset }}
   trigger.on-rollout-aborted: {{ toJson .Values.controller.notifications.templates.triggerOnRolloutAborted }}
   service.slack: |
     token: {{ .Values.controller.notifications.slackToken }}

@@ -68,6 +68,7 @@ controller:
                 {{end}}
                 {{range $index, $stepMap := .rollout.spec.strategy.canary.steps}}
                   {{range $stepName, $stepValue := $stepMap}}
+                    {{if not (eq $stepName "setCanaryScale") }}
                     {{if not $index}},{{end}}
                     {{if $index}},{{end}}
                       {
@@ -81,6 +82,7 @@ controller:
                         {{end}}
                         "short": true
                       }
+                   {{end}}
                   {{end}}
                 {{end}}
                 ]

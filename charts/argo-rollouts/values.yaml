@@ -66,6 +66,23 @@ controller:
                     "short": true
                   }
                 {{end}}
+                {{range $index, $stepMap := .rollout.spec.strategy.canary.steps}}
+                  {{range $stepName, $stepValue := $stepMap}}
+                    {{if not $index}},{{end}}
+                    {{if $index}},{{end}}
+                      {
+                        "title": "Step {{ add $index 1}}",
+                        {{if eq $stepName "pause" }}
+                        {{range $pauseName, $pauseValue := $stepValue}}
+                        "value": "{{$stepName}}: {{$pauseValue}}",
+                        {{end}}
+                        {{else}}
+                        "value": "{{$stepName}}: {{$stepValue}}",
+                        {{end}}
+                        "short": true
+                      }
+                  {{end}}
+                {{end}}
                 ]
               }]
       rolloutAborted: |

@@ -15,7 +15,9 @@ spec:
     metadata:
       {{- with (mergeOverwrite (deepCopy .Values.global.podAnnotations) .Values.redis.podAnnotations) }}
       annotations:
-        {{- toYaml . | nindent 8 }}
+        {{- range $key, $value := . }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
       {{- end }}
       labels:
         {{- include "argo-cd.labels" (dict "context" . "component" .Values.redis.name "name" .Values.redis.name) | nindent 8 }}
@@ -112,6 +114,10 @@ spec:
       volumes:
 {{- toYaml .Values.redis.volumes | nindent 8}}
 {{- end }}
+      {{- if .Values.redis.initContainers }}
+      initContainers:
+      {{- toYaml .Values.redis.initContainers | nindent 6 }}
+      {{- end }}
 {{- if .Values.redis.priorityClassName }}
       priorityClassName: {{ .Values.redis.priorityClassName }}
 {{- end }}

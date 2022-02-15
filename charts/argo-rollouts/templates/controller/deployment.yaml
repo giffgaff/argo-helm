@@ -12,6 +12,7 @@ spec:
       {{- include "argo-rollouts.selectorLabels" . | nindent 6 }}
   strategy:
     type: Recreate
+  replicas: {{ .Values.controller.replicas }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -36,6 +37,9 @@ spec:
         {{- if not .Values.clusterInstall }}
         - --namespaced
         {{- end }}
+        {{- if gt .Values.controller.replicas 1.0 }}
+        - --leader-elect
+        {{- end }}
         {{- with .Values.controller.extraArgs }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -52,6 +56,9 @@ spec:
           {{- toYaml .Values.containerSecurityContext | nindent 10 }}
         resources:
           {{- toYaml .Values.controller.resources | nindent 10 }}
+      {{- with .Values.controller.extraContainers }}
+        {{- toYaml . | nindent 6 }}
+      {{- end }}
       {{- if .Values.controller.nodeSelector }}
       nodeSelector:
         {{- toYaml .Values.controller.nodeSelector | nindent 8 }}

@@ -35,6 +35,10 @@ global:
   #   hostnames:
   #   - git.myhostname
 
+  # -- Additional labels to add to all resources
+  additionalLabels: {}
+    # app: argo-cd
+
   networkPolicy:
     # -- Create NetworkPolicy objects for all components
     create: false
@@ -53,6 +57,34 @@ apiVersionOverrides:
 # -- Create clusterroles that extend existing clusterroles to interact with argo-cd crds
 ## Ref: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#aggregated-clusterroles
 createAggregateRoles: false
+
+# -- Array of extra K8s manifests to deploy
+extraObjects: []
+  # - apiVersion: secrets-store.csi.x-k8s.io/v1
+  #   kind: SecretProviderClass
+  #   metadata:
+  #     name: argocd-secrets-store
+  #   spec:
+  #     provider: aws
+  #     parameters:
+  #       objects: |
+  #         - objectName: "argocd"
+  #           objectType: "secretsmanager"
+  #           jmesPath:
+  #               - path: "client_id"
+  #                 objectAlias: "client_id"
+  #               - path: "client_secret"
+  #                 objectAlias: "client_secret"
+  #     secretObjects:
+  #     - data:
+  #       - key: client_id
+  #         objectName: client_id
+  #       - key: client_secret
+  #         objectName: client_secret
+  #       secretName: argocd-secrets-store
+  #       type: Opaque
+  #       labels:
+  #         app.kubernetes.io/part-of: argocd
 
 ## Controller
 controller:
@@ -215,6 +247,11 @@ controller:
   metrics:
     # -- Deploy metrics service
     enabled: false
+    applicationLabels:
+      # -- Enables additional labels in argocd_app_labels metric
+      enabled: false
+      # -- Additional labels
+      labels: {}
     service:
       # -- Metrics service annotations
       annotations: {}
@@ -288,6 +325,36 @@ controller:
 
   # -- Additional containers to be added to the application controller pod
   extraContainers: []
+
+  # -- Init containers to add to the application controller pod
+  ## If your target Kubernetes cluster(s) require a custom auth provider executable
+  ## you could use this (and the same in the server pod) to bootstrap
+  ## that executable into your ArgoCD container
+  initContainers: []
+  #  - name: download-tools
+  #    image: alpine:3.8
+  #    command: [sh, -c]
+  #    args:
+  #      - wget -qO- https://get.helm.sh/helm-v2.16.1-linux-amd64.tar.gz | tar -xvzf - &&
+  #        mv linux-amd64/helm /custom-tools/
+  #    volumeMounts:
+  #      - mountPath: /custom-tools
+  #        name: custom-tools
+  #  volumeMounts:
+  #  - mountPath: /usr/local/bin/helm
+  #    name: custom-tools
+  #    subPath: helm
+
+  pdb:
+    # -- Labels to be added to application controller pdb
+    labels: {}
+    # -- Annotations to be added to application controller pdb
+    annotations: {}
+
+    # -- Deploy a Poddisruptionbudget for the application controller
+    enabled: false
+    # minAvailable: 1
+    # maxUnavailable: 0
 
 ## Dex
 dex:
@@ -467,6 +534,33 @@ dex:
   # -- Additional containers to be added to the dex pod
   extraContainers: []
 
+  # -- Init containers to add to the dex pod
+  initContainers: []
+  #  - name: download-tools
+  #    image: alpine:3.8
+  #    command: [sh, -c]
+  #    args:
+  #      - wget -qO- https://get.helm.sh/helm-v2.16.1-linux-amd64.tar.gz | tar -xvzf - &&
+  #        mv linux-amd64/helm /custom-tools/
+  #    volumeMounts:
+  #      - mountPath: /custom-tools
+  #        name: custom-tools
+  #  volumeMounts:
+  #  - mountPath: /usr/local/bin/helm
+  #    name: custom-tools
+  #    subPath: helm
+
+  pdb:
+    # -- Labels to be added to Dex server pdb
+    labels: {}
+    # -- Annotations to be added to Dex server pdb
+    annotations: {}
+
+    # -- Deploy a Poddisruptionbudget for the Dex server
+    enabled: false
+    # minAvailable: 1
+    # maxUnavailable: 0
+
 ## Redis
 redis:
   # -- Enable redis
@@ -478,7 +572,7 @@ redis:
     # -- Redis repository
     repository: redis
     # -- Redis tag
-    tag: 6.2.4-alpine
+    tag: 6.2.6-alpine
     # -- Redis imagePullPolicy
     imagePullPolicy: IfNotPresent
 
@@ -567,6 +661,22 @@ redis:
   # -- Additional containers to be added to the redis pod
   extraContainers: []
 
+  # -- Init containers to add to the redis pod
+  initContainers: []
+  #  - name: download-tools
+  #    image: alpine:3.8
+  #    command: [sh, -c]
+  #    args:
+  #      - wget -qO- https://get.helm.sh/helm-v2.16.1-linux-amd64.tar.gz | tar -xvzf - &&
+  #        mv linux-amd64/helm /custom-tools/
+  #    volumeMounts:
+  #      - mountPath: /custom-tools
+  #        name: custom-tools
+  #  volumeMounts:
+  #  - mountPath: /usr/local/bin/helm
+  #    name: custom-tools
+  #    subPath: helm
+
   service:
     # -- Redis service annotations
     annotations: {}
@@ -624,6 +734,17 @@ redis:
       # -- Prometheus ServiceMonitor labels
       additionalLabels: {}
 
+  pdb:
+    # -- Labels to be added to Redis server pdb
+    labels: {}
+    # -- Annotations to be added to Redis server pdb
+    annotations: {}
+
+    # -- Deploy a Poddisruptionbudget for the Redis server
+    enabled: false
+    # minAvailable: 1
+    # maxUnavailable: 0
+
 # This key configures Redis-HA subchart and when enabled (redis-ha.enabled=true)
 # the custom redis deployment is omitted
 # Check the redis-ha chart for more properties
@@ -652,7 +773,7 @@ redis-ha:
       enabled: true
   image:
     # -- Redis tag
-    tag: 6.2.4-alpine
+    tag: 6.2.6-alpine
 
 ## Server
 server:
@@ -999,10 +1120,16 @@ server:
   # Find your domain with: kubectl describe --namespace=openshift-ingress-operator ingresscontroller/default | grep Domain:
   # If 'hostname' is an empty string "" OpenShift will create a hostname for you.
   route:
-    # -- Enable a OpenShift route for the Argo CD server
+    # -- Enable an OpenShift Route for the Argo CD server
     enabled: false
-    # -- Hostname of OpenShift route
+    # -- Openshift Route annotations
+    annotations: {}
+    # -- Hostname of OpenShift Route
     hostname: ""
+    # -- Termination type of Openshift Route
+    termination_type: passthrough
+    # -- Termination policy of Openshift Route
+    termination_policy: None
 
   # -- Manage ArgoCD configmap (Declarative Setup)
   ## Ref: https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/argocd-cm.yaml
@@ -1147,6 +1274,8 @@ server:
   #     applications:
   #     - '*-prod'
   #     manualSync: true
+  #   signatureKeys:
+  #   - keyID: ABCDEF1234567890
 
   ## Enable Admin ClusterRole resources.
   ## Enable if you would like to grant rights to ArgoCD to deploy to the local Kubernetes cluster.
@@ -1164,6 +1293,27 @@ server:
   #      enabled: true
   #      oauthclientCredentials:
   #        secretName: argocd-secret
+
+  ## Create a Google Managed Certificate for use with the GKE Ingress Controller
+  ## https://cloud.google.com/kubernetes-engine/docs/how-to/managed-certs
+  GKEmanagedCertificate:
+    # -- Enable ManagedCertificate custom resource for Google Kubernetes Engine.
+    enabled: false
+    # -- Domains for the Google Managed Certificate
+    domains:
+    - argocd.example.com
+
+  ## Create a Google FrontendConfig Custom Resource, for use with the GKE Ingress Controller
+  ## https://cloud.google.com/kubernetes-engine/docs/how-to/ingress-features#configuring_ingress_features_through_frontendconfig_parameters
+  GKEfrontendConfig:
+    # -- Enable FrontConfig custom resource for Google Kubernetes Engine
+    enabled: false
+    # -- [FrontendConfigSpec]
+    spec: {}
+  # spec:
+  #   redirectToHttps:
+  #     enabled: true
+  #     responseCodeName: RESPONSE_CODE
 
   # -- Additional containers to be added to the server pod
   ## See https://github.com/lemonldap-ng-controller/lemonldap-ng-controller as example.
@@ -1188,6 +1338,63 @@ server:
   #   volumeMounts:
   #   - name: copy-portal-skins
   #     mountPath: /srv/var/lib/lemonldap-ng/portal/skins
+
+  # -- Init containers to add to the server pod
+  ## If your target Kubernetes cluster(s) require a custom auth provider executable
+  ## you could use this (and the same in the application controller pod) to bootstrap
+  ## that executable into your ArgoCD container
+  initContainers: []
+  #  - name: download-tools
+  #    image: alpine:3.8
+  #    command: [sh, -c]
+  #    args:
+  #      - wget -qO- https://get.helm.sh/helm-v2.16.1-linux-amd64.tar.gz | tar -xvzf - &&
+  #        mv linux-amd64/helm /custom-tools/
+  #    volumeMounts:
+  #      - mountPath: /custom-tools
+  #        name: custom-tools
+  #  volumeMounts:
+  #  - mountPath: /usr/local/bin/helm
+  #    name: custom-tools
+  #    subPath: helm
+
+  extensions:
+    # -- Enable support for extensions
+    ## This function in tech preview stage, do expect unstability or breaking changes in newer versions. Bump image.tag if necessary.
+    enabled: false
+
+    image:
+      # -- Repository to use for extensions image
+      repository: "ghcr.io/argoproj-labs/argocd-extensions"
+      # -- Tag to use for extensions image
+      tag: "v0.1.0"
+      # -- Image pull policy for extensions
+      imagePullPolicy: IfNotPresent
+
+    # -- Resource limits and requests for the argocd-extensions container
+    resources: {}
+    #  limits:
+    #    cpu: 50m
+    #    memory: 128Mi
+    #  requests:
+    #    cpu: 10m
+    #    memory: 64Mi
+
+    # -- Extensions to be loaded into the server
+    contents: []
+    # - name: argo-rollouts
+    #   url: https://github.com/argoproj-labs/rollout-extension/releases/download/v0.1.0/extension.tar
+
+  pdb:
+    # -- Labels to be added to server pdb
+    labels: {}
+    # -- Annotations to be added to server pdb
+    annotations: {}
+
+    # -- Deploy a Poddisruptionbudget for the server
+    enabled: false
+    # minAvailable: 1
+    # maxUnavailable: 0
 
 ## Repo Server
 repoServer:
@@ -1400,6 +1607,17 @@ repoServer:
   #     - list
   #     - watch
 
+  # Init container to copy argocd binary
+  copyutil:
+    # -- Resource limits and requests for the copyutil initContainer
+    resources: {}
+    #  limits:
+    #    cpu: 50m
+    #    memory: 64Mi
+    #  requests:
+    #    cpu: 10m
+    #    memory: 32Mi
+
   # -- Init containers to add to the repo server pods
   initContainers: []
   #  - name: download-tools
@@ -1415,6 +1633,17 @@ repoServer:
   #  - mountPath: /usr/local/bin/helm
   #    name: custom-tools
   #    subPath: helm
+
+  pdb:
+    # -- Labels to be added to Repo server pdb
+    labels: {}
+    # -- Annotations to be added to Repo server pdb
+    annotations: {}
+
+    # -- Deploy a Poddisruptionbudget for the Repo server
+    enabled: false
+    # minAvailable: 1
+    # maxUnavailable: 0
 
 ## Argo Configs
 configs:
@@ -1476,6 +1705,8 @@ configs:
       # @default -- See [values.yaml]
       ssh_known_hosts: |
         bitbucket.org ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAubiN81eDcafrgMeLzaFPsw2kNvEcqTKl/VqLat/MaB33pZy0y3rJZtnqwR2qOOvbwKZYKiEO1O6VqNEBxKvJJelCq0dTXWT5pbO2gDXC6h6QDXCaHo6pOHGPUy+YBaGQRGuSusMEASYiWunYN0vCAI8QaXnWMXNMdFP3jHAJH0eDsoiGnLPBlBp4TNm6rYI74nMzgz3B9IikW4WVK+dc8KZJZWYjAuORU3jc1c/NPskD2ASinf8v3xnfXeukU0sJ5N6m5E8VLjObPEO+mN2t/FZTMZLiFqPWc/ALSqnMnnhwrNi2rbfg/rd/IpL8Le3pSBne8+seeFVBoGqzHM9yXw==
+        github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=
+        github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
         github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==
         gitlab.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFSMqzJeV9rUzU4kWitGjeR4PWSa29SPqJ1fVkhtj3Hw9xjLVXVYrU9QlYWrOLXBpQ6KWjbjTDTdDkoohFzgbEY=
         gitlab.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAfuCHKVTjquxvt6CM6tdG4SLp1Btn/nOeHHE5UOzRdf

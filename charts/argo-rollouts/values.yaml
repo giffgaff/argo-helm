@@ -301,8 +301,6 @@ dashboard:
     # If not set and create is true, a name is generated using the fullname template
     name: ""
 
-cluster_analysis_template: no
-
   ## Ingress configuration.
   ## ref: https://kubernetes.io/docs/user-guide/ingress/
   ##
@@ -348,3 +346,5 @@ cluster_analysis_template: no
       # - secretName: argorollouts-example-tls
       #   hosts:
       #     - argorollouts.example.com
+
+cluster_analysis_template: no

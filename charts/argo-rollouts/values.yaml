@@ -127,12 +127,68 @@ controller:
                 }
                 ]
               }]
+      template.analysis-run-error: |
+        message: Rollout {{.rollout.metadata.name}}'s analysis run is in error state.
+        email:
+          subject: Rollout {{.rollout.metadata.name}}'s analysis run is in error state.
+        slack:
+          attachments: |
+              [{
+                "title": "{{ .rollout.metadata.name}}",
+                "color": "#ECB22E",
+                "fields": [
+                {
+                  "title": "Strategy",
+                  "value": "{{if .rollout.spec.strategy.blueGreen}}BlueGreen{{end}}{{if .rollout.spec.strategy.canary}}Canary{{end}}",
+                  "short": true
+                }
+                {{range $index, $c := .rollout.spec.template.spec.containers}}
+                  {{if not $index}},{{end}}
+                  {{if $index}},{{end}}
+                  {
+                    "title": "{{$c.name}}",
+                    "value": "{{$c.image}}",
+                    "short": true
+                  }
+                {{end}}
+                ]
+              }]
+      template.analysis-run-failed: |
+        message: Rollout {{.rollout.metadata.name}}'s analysis run failed.
+        email:
+          subject: Rollout {{.rollout.metadata.name}}'s analysis run failed.
+        slack:
+          attachments: |
+              [{
+                "title": "{{ .rollout.metadata.name}}",
+                "color": "#E01E5A",
+                "fields": [
+                {
+                  "title": "Strategy",
+                  "value": "{{if .rollout.spec.strategy.blueGreen}}BlueGreen{{end}}{{if .rollout.spec.strategy.canary}}Canary{{end}}",
+                  "short": true
+                }
+                {{range $index, $c := .rollout.spec.template.spec.containers}}
+                  {{if not $index}},{{end}}
+                  {{if $index}},{{end}}
+                  {
+                    "title": "{{$c.name}}",
+                    "value": "{{$c.image}}",
+                    "short": true
+                  }
+                {{end}}
+                ]
+              }]
       triggerOnRolloutCompleted: |
         - send: [rollout-completed]
       triggerOnRolloutUpdated: |
         - send: [rollout-updated]
       triggerOnRolloutAborted: |
         - send: [rollout-aborted]
+      trigger.on-analysis-run-error: |
+        - send: [analysis-run-error]
+      trigger.on-analysis-run-failed: |
+        - send: [analysis-run-failed]
 
   # -- Value of label `app.kubernetes.io/component`
   component: rollouts-controller

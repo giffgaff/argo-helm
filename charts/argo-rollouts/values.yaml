@@ -127,7 +127,7 @@ controller:
                 }
                 ]
               }]
-      template.analysis-run-error: |
+      template.analysisRunError: |
         message: Rollout {{.rollout.metadata.name}}'s analysis run is in error state.
         slack:
           attachments: |
@@ -151,7 +151,7 @@ controller:
                 {{end}}
                 ]
               }]
-      template.analysis-run-failed: |
+      template.analysisRunFailed: |
         message: Rollout {{.rollout.metadata.name}}'s analysis run failed.
         slack:
           attachments: |
@@ -181,9 +181,9 @@ controller:
         - send: [rollout-updated]
       triggerOnRolloutAborted: |
         - send: [rollout-aborted]
-      trigger.on-analysis-run-error: |
+      triggerOnAnalysisRunError: |
         - send: [analysis-run-error]
-      trigger.on-analysis-run-failed: |
+      triggerOnAnalysisRunFailed: |
         - send: [analysis-run-failed]
 
   # -- Value of label `app.kubernetes.io/component`

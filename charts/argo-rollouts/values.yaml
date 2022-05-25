@@ -128,48 +128,60 @@ controller:
                 ]
               }]
       analysisRunError: |
-        message: Rollout {{.rollout.metadata.name}}'s analysis run is in error state.
+        message: Rollout Failed, analysis run in error state.
         slack:
           attachments: |
               [{
-                "title": "{{ .rollout.metadata.name}}",
+                "title": "Argo UI",
+                "title_link": "https://argo.prd.gaff.systems/rollout/{{.rollout.metadata.name}}",
                 "color": "#ECB22E",
                 "fields": [
+                {
+                  "title": "Service",
+                  "value": "{{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}",
+                  "short": true
+                },
                 {
                   "title": "Strategy",
                   "value": "{{if .rollout.spec.strategy.blueGreen}}BlueGreen{{end}}{{if .rollout.spec.strategy.canary}}Canary{{end}}",
                   "short": true
                 }
-                {{range $index, $c := .rollout.spec.template.spec.containers}}
+                {{range $index, $c := .rollout.spec.strategy.canary.analysis.templates}}
                   {{if not $index}},{{end}}
                   {{if $index}},{{end}}
                   {
-                    "title": "{{$c.name}}",
-                    "value": "{{$c.image}}",
+                    "title": "Analysis Template",
+                    "value": "{{$c.templateName}}",
                     "short": true
                   }
                 {{end}}
                 ]
               }]
       analysisRunFailed: |
-        message: Rollout {{.rollout.metadata.name}}'s analysis run failed.
+        message: Rollout Failed, analysis run failed.
         slack:
           attachments: |
               [{
-                "title": "{{ .rollout.metadata.name}}",
+                "title": "Argo UI",
+                "title_link": "https://argo.prd.gaff.systems/rollout/{{.rollout.metadata.name}}",
                 "color": "#E01E5A",
                 "fields": [
+                {
+                  "title": "Service",
+                  "value": "{{.rollout.metadata.namespace}}/{{.rollout.metadata.name}}",
+                  "short": true
+                },
                 {
                   "title": "Strategy",
                   "value": "{{if .rollout.spec.strategy.blueGreen}}BlueGreen{{end}}{{if .rollout.spec.strategy.canary}}Canary{{end}}",
                   "short": true
                 }
-                {{range $index, $c := .rollout.spec.template.spec.containers}}
+                {{range $index, $c := .rollout.spec.strategy.canary.analysis.templates}}
                   {{if not $index}},{{end}}
                   {{if $index}},{{end}}
                   {
-                    "title": "{{$c.name}}",
-                    "value": "{{$c.image}}",
+                    "title": "Analysis Template",
+                    "value": "{{$c.templateName}}",
                     "short": true
                   }
                 {{end}}

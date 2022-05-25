@@ -14,13 +14,13 @@ data:
   template.rollout-completed: {{ toJson .Values.controller.notifications.templates.rolloutCompleted }}
   template.rollout-updated: {{ toJson .Values.controller.notifications.templates.rolloutUpdated }}
   template.rollout-aborted: {{ toJson .Values.controller.notifications.templates.rolloutAborted }}
-  template.analysis-run-error: {{ toJson .Values.controller.notifications.templates.analysis-run-error }}
-  template.analysis-run-failed: {{ toJson .Values.controller.notifications.templates.analysis-run-failed }}
+  template.analysis-run-error: {{ toJson .Values.controller.notifications.templates.analysisRunError }}
+  template.analysis-run-failed: {{ toJson .Values.controller.notifications.templates.analysisRunFailed }}
   trigger.on-rollout-completed: {{ toJson .Values.controller.notifications.templates.triggerOnRolloutCompleted }}
   trigger.on-rollout-updated: {{ toJson .Values.controller.notifications.templates.triggerOnRolloutUpdated }}
   trigger.on-rollout-aborted: {{ toJson .Values.controller.notifications.templates.triggerOnRolloutAborted }}
-  trigger.on-analysis-run-error: {{ toJson .Values.controller.notifications.templates.trigger.on-analysis-run-error }}
-  trigger.on-analysis-run-failed: {{ toJson .Values.controller.notifications.templates.trigger.on-analysis-run-failed }}
+  trigger.on-analysis-run-error: {{ toJson .Values.controller.notifications.templates.triggerOnAnalysisRunError }}
+  trigger.on-analysis-run-failed: {{ toJson .Values.controller.notifications.templates.triggerOnAnalysisRunFailed }}
   service.slack: |
     token: {{ .Values.controller.notifications.slackToken }}
 

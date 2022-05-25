@@ -129,8 +129,6 @@ controller:
               }]
       template.analysis-run-error: |
         message: Rollout {{.rollout.metadata.name}}'s analysis run is in error state.
-        email:
-          subject: Rollout {{.rollout.metadata.name}}'s analysis run is in error state.
         slack:
           attachments: |
               [{
@@ -155,8 +153,6 @@ controller:
               }]
       template.analysis-run-failed: |
         message: Rollout {{.rollout.metadata.name}}'s analysis run failed.
-        email:
-          subject: Rollout {{.rollout.metadata.name}}'s analysis run failed.
         slack:
           attachments: |
               [{

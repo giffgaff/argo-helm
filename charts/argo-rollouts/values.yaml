@@ -127,7 +127,7 @@ controller:
                 }
                 ]
               }]
-      template.analysisRunError: |
+      analysisRunError: |
         message: Rollout {{.rollout.metadata.name}}'s analysis run is in error state.
         slack:
           attachments: |
@@ -151,7 +151,7 @@ controller:
                 {{end}}
                 ]
               }]
-      template.analysisRunFailed: |
+      analysisRunFailed: |
         message: Rollout {{.rollout.metadata.name}}'s analysis run failed.
         slack:
           attachments: |

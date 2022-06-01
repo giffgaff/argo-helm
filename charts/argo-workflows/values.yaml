@@ -56,10 +56,16 @@ controller:
     # limit: 10
     # burst: 1
 
+  rbac:
+    # -- Adds Role and RoleBinding for the controller.
+    create: true
+
   # -- Limits the maximum number of incomplete workflows in a namespace
   namespaceParallelism:
   # -- Resolves ongoing, uncommon AWS EKS bug: https://github.com/argoproj/argo-workflows/pull/4224
   initialDelay:
+  # -- deploymentAnnotations is an optional map of annotations to be applied to the controller Deployment
+  deploymentAnnotations: {}
   # -- podAnnotations is an optional map of annotations to be applied to the controller Pods
   podAnnotations: {}
   # -- Optional labels to add to the controller pods
@@ -166,7 +172,7 @@ controller:
 
   # -- Specifies the container runtime interface to use (one of: `docker`, `kubelet`, `k8sapi`, `pns`, `emissary`)
   ## Ref: https://argoproj.github.io/argo-workflows/workflow-executors/
-  containerRuntimeExecutor: docker
+  containerRuntimeExecutor: emissary
   # -- Specifies the executor to use. This has precedence over `controller.containerRuntimeExecutor`.
   containerRuntimeExecutors: []
     # - name: emissary
@@ -223,6 +229,10 @@ controller:
 
   # -- Extra arguments to be added to the controller
   extraArgs: []
+  # -- Additional volume mounts to the controller main container
+  volumeMounts: []
+  # -- Additional volumes to the controller pod
+  volumes: []
   # -- The number of controller pods to run
   replicas: 1
 
@@ -246,6 +256,8 @@ controller:
   # -- Configure Argo Server to show custom [links]
   ## Ref: https://argoproj.github.io/argo-workflows/links/
   links: []
+  # -- Set ui navigation bar background color
+  navColor: ""
   clusterWorkflowTemplates:
     # -- Create a ClusterRole and CRB for the controller to access ClusterWorkflowTemplates.
     enabled: true
@@ -283,12 +295,17 @@ server:
     repository: argoproj/argocli
     # -- Overrides the image tag whose default is the chart appVersion.
     tag: ""
+  # -- optional map of annotations to be applied to the ui Deployment
+  deploymentAnnotations: {}
   # -- optional map of annotations to be applied to the ui Pods
   podAnnotations: {}
   # -- Optional labels to add to the UI pods
   podLabels: {}
   # -- SecurityContext to set on the server pods
   podSecurityContext: {}
+  rbac:
+    # -- Adds Role and RoleBinding for the server.
+    create: true
   # -- Servers container-level security context
   securityContext:
     readOnlyRootFilesystem: false
@@ -480,6 +497,8 @@ artifactRepository:
     # region:
     # roleARN:
     # useSDKCreds: true
+    # encryptionOptions:
+    #    enableEncryption: true
   # -- Store artifact in a GCS object store
   # @default -- `{}` (See [values.yaml])
   gcs: {}

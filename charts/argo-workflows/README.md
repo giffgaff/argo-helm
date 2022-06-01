@@ -1,23 +1,23 @@
 # Argo Workflows Chart
 
-This is a **community maintained** chart. It is used to set up argo and it's needed dependencies through one command. This is used in conjunction with [helm](https://github.com/kubernetes/helm).
+This is a **community maintained** chart. It is used to set up argo and its needed dependencies through one command. This is used in conjunction with [helm](https://github.com/kubernetes/helm).
 
 If you want your deployment of this helm chart to most closely match the [argo CLI](https://github.com/argoproj/argo-workflows), you should deploy it in the `kube-system` namespace.
 
 ## Pre-Requisites
 
-This chart uses an install hook to configure the CRD definition. Installation of CRDs is a somewhat privileged process in itself and in RBAC enabled clusters the `default` service account for namespaces does not typically have the ability to do create these.
+This chart uses an install hook to configure the CRD definition. Installation of CRDs is a somewhat privileged process in itself and in RBAC enabled clusters the `default` service account for namespaces does not typically have the ability to create these.
 
 A few options are:
 
-- Manually create a ServiceAccount in the Namespace which your release will be deployed w/ appropriate bindings to perform this action and set the `serviceAccountName` field in the Workflow spec
+- Manually create a ServiceAccount in the Namespace in which your release will be deployed w/ appropriate bindings to perform this action and set the `serviceAccountName` field in the Workflow spec
 - Augment the `default` ServiceAccount permissions in the Namespace in which your Release is deployed to have the appropriate permissions
 
 ## Usage Notes
 
 ### Workflow controller
 
-This chart defaults to setting the `controller.instanceID.enabled` to `false` now, which means the deployed controller will act upon any workflow deployed to the cluster. If you would like to limit the behavior and deploy multiple workflow controllers, please use the `controller.instanceID.enabled` attribute along with one of it's configuration options to set the `instanceID` of the workflow controller to be properly scoped for your needs.
+This chart defaults to setting the `controller.instanceID.enabled` to `false` now, which means the deployed controller will act upon any workflow deployed to the cluster. If you would like to limit the behavior and deploy multiple workflow controllers, please use the `controller.instanceID.enabled` attribute along with one of its configuration options to set the `instanceID` of the workflow controller to be properly scoped for your needs.
 
 ### Workflow server authentication
 
@@ -65,8 +65,9 @@ Fields to note:
 |-----|------|---------|-------------|
 | controller.affinity | object | `{}` | Assign custom [affinity] rules |
 | controller.clusterWorkflowTemplates.enabled | bool | `true` | Create a ClusterRole and CRB for the controller to access ClusterWorkflowTemplates. |
-| controller.containerRuntimeExecutor | string | `"docker"` | Specifies the container runtime interface to use (one of: `docker`, `kubelet`, `k8sapi`, `pns`, `emissary`) |
+| controller.containerRuntimeExecutor | string | `"emissary"` | Specifies the container runtime interface to use (one of: `docker`, `kubelet`, `k8sapi`, `pns`, `emissary`) |
 | controller.containerRuntimeExecutors | list | `[]` | Specifies the executor to use. This has precedence over `controller.containerRuntimeExecutor`. |
+| controller.deploymentAnnotations | object | `{}` | deploymentAnnotations is an optional map of annotations to be applied to the controller Deployment |
 | controller.extraArgs | list | `[]` | Extra arguments to be added to the controller |
 | controller.extraContainers | list | `[]` | Extra containers to be added to the controller deployment |
 | controller.extraEnv | list | `[]` | Extra environment variables to provide to the controller container |
@@ -90,6 +91,7 @@ Fields to note:
 | controller.metricsConfig.servicePortName | string | `"metrics"` | Service metrics port name |
 | controller.name | string | `"workflow-controller"` | Workflow controller name string |
 | controller.namespaceParallelism | string | `nil` | Limits the maximum number of incomplete workflows in a namespace |
+| controller.navColor | string | `""` | Set ui navigation bar background color |
 | controller.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | [Node selector] |
 | controller.parallelism | string | `nil` | parallelism dictates how many workflows can be running at the same time |
 | controller.pdb.enabled | bool | `false` | Configure [Pod Disruption Budget] for the controller pods |
@@ -99,6 +101,7 @@ Fields to note:
 | controller.podSecurityContext | object | `{}` | SecurityContext to set on the controller pods |
 | controller.podWorkers | string | `nil` | Number of pod workers |
 | controller.priorityClassName | string | `""` | Leverage a PriorityClass to ensure your pods survive resource shortages. |
+| controller.rbac.create | bool | `true` | Adds Role and RoleBinding for the controller. |
 | controller.replicas | int | `1` | The number of controller pods to run |
 | controller.resourceRateLimit | object | `{}` | Globally limits the rate at which pods are created. This is intended to mitigate flooding of the Kubernetes API server by workflows with a large amount of parallel nodes. |
 | controller.resources | object | `{}` | Resource limits and requests for the controller |
@@ -118,6 +121,8 @@ Fields to note:
 | controller.telemetryConfig.servicePort | int | `8081` | telemetry service port |
 | controller.telemetryConfig.servicePortName | string | `"telemetry"` | telemetry service port name |
 | controller.tolerations | list | `[]` | [Tolerations] for use with node taints |
+| controller.volumeMounts | list | `[]` | Additional volume mounts to the controller main container |
+| controller.volumes | list | `[]` | Additional volumes to the controller pod |
 | controller.workflowDefaults | object | `{}` | Default values that will apply to all Workflows from this controller, unless overridden on the Workflow-level. Only valid for 2.7+ |
 | controller.workflowNamespaces | list | `["default"]` | Specify all namespaces where this workflow controller instance will manage workflows. This controls where the service account and RBAC resources will be created. Only valid when singleNamespace is false. |
 | controller.workflowRestrictions | object | `{}` | Restricts the Workflows that the controller will process. Only valid for 2.9+ |
@@ -142,6 +147,7 @@ Fields to note:
 | server.baseHref | string | `"/"` | Value for base href in index.html. Used if the server is running behind reverse proxy under subpath different from /. |
 | server.clusterWorkflowTemplates.enableEditing | bool | `true` | Give the server permissions to edit ClusterWorkflowTemplates. |
 | server.clusterWorkflowTemplates.enabled | bool | `true` | Create a ClusterRole and CRB for the server to access ClusterWorkflowTemplates. |
+| server.deploymentAnnotations | object | `{}` | optional map of annotations to be applied to the ui Deployment |
 | server.enabled | bool | `true` | Deploy the Argo Server |
 | server.extraArgs | list | `[]` | Extra arguments to provide to the Argo server binary, such as for disabling authentication. |
 | server.extraContainers | list | `[]` | Extra containers to be added to the server deployment |
@@ -167,6 +173,7 @@ Fields to note:
 | server.podLabels | object | `{}` | Optional labels to add to the UI pods |
 | server.podSecurityContext | object | `{}` | SecurityContext to set on the server pods |
 | server.priorityClassName | string | `""` | Leverage a PriorityClass to ensure your pods survive resource shortages |
+| server.rbac.create | bool | `true` | Adds Role and RoleBinding for the server. |
 | server.replicas | int | `1` | The number of server pods to run |
 | server.resources | object | `{}` | Resource limits and requests for the server |
 | server.secure | bool | `false` | Run the argo server in "secure" mode. Configure this value instead of `--secure` in extraArgs. |
@@ -213,7 +220,7 @@ Fields to note:
 1. switched to quay.io as the default registry for all images
 1. removed any included usage of Minio
 1. aligned the configuration of serviceAccounts with the argo-cd chart, ie: what used to be `server.createServiceAccount` is now `server.serviceAccount.create`
-1. moved the previously known as `telemetryServicePort` inside the `telemetryConfig` as `telemetryConfig.servicePort` - same for `metricsConfig`
+1. moved the field previously known as `telemetryServicePort` inside the `telemetryConfig` as `telemetryConfig.servicePort` - same for `metricsConfig`
 
 [affinity]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
 [links]: https://argoproj.github.io/argo-workflows/links/

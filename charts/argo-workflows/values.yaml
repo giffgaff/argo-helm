@@ -137,7 +137,7 @@ controller:
   # as metrics by default, but can be overridden using this config.
   telemetryConfig:
     # -- Enables prometheus telemetry server
-    enabled: false
+    enabled: true
     # -- telemetry path
     path: /telemetry
     # -- telemetry container port
@@ -148,7 +148,7 @@ controller:
     servicePortName: telemetry
   serviceMonitor:
     # -- Enable a prometheus ServiceMonitor
-    enabled: false
+    enabled: true
     # -- Prometheus ServiceMonitor labels
     additionalLabels: {}
     # -- Prometheus ServiceMonitor namespace

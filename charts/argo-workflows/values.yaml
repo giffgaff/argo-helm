@@ -1,3 +1,5 @@
+secrets_db_username:
+secrets_db_password:
 images:
   # -- imagePullPolicy to apply to all containers
   pullPolicy: Always
@@ -95,26 +97,26 @@ controller:
       drop:
         - ALL
   # -- enable persistence using postgres
-  persistence: {}
-  # connectionPool:
-  #   maxIdleConns: 100
-  #   maxOpenConns: 0
+  persistence:
+   connectionPool:
+     maxIdleConns: 100
+     maxOpenConns: 0
   # # save the entire workflow into etcd and DB
-  # nodeStatusOffLoad: false
+   nodeStatusOffLoad: false
   # # enable archiving of old workflows
-  # archive: false
-  # postgresql:
-  #   host: localhost
-  #   port: 5432
-  #   database: postgres
-  #   tableName: argo_workflows
-  #   # the database secrets must be in the same namespace of the controller
-  #   userNameSecret:
-  #     name: argo-postgres-config
-  #     key: username
-  #   passwordSecret:
-  #     name: argo-postgres-config
-  #     key: password
+   archive: false
+   postgresql:
+     host: localhost
+     port: 5432
+     database: postgres
+     tableName: argo_workflows
+     # the database secrets must be in the same namespace of the controller
+     userNameSecret:
+       name: argo-postgres-config
+       key: username
+     passwordSecret:
+       name: argo-postgres-config
+       key: password
 
   # -- Default values that will apply to all Workflows from this controller, unless overridden on the Workflow-level.
   # Only valid for 2.7+

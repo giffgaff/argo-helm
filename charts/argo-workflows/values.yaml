@@ -1,5 +1,6 @@
 secrets_db_username:
 secrets_db_password:
+
 images:
   # -- imagePullPolicy to apply to all containers
   pullPolicy: Always

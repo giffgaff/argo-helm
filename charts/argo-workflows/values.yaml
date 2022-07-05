@@ -1,6 +1,11 @@
 secrets_db_username:
 secrets_db_password:
 
+virtualservice:
+  enabled: true
+  gateways: [ "istio-system/https-gateway" ]
+  hostname:
+
 images:
   # -- imagePullPolicy to apply to all containers
   pullPolicy: Always

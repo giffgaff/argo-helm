@@ -1,0 +1,23 @@
+{{- if and .Values.virtualservice.enabled .Values.server.enabled -}}
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: {{ include "argo-workflows.server.fullname" . }}
+  namespace: istio-system
+spec:
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        remoteIpBlocks:
+        - 167.98.102.254
+        - 79.125.73.252
+    to:
+    - operation:
+        hosts:
+        - {{ .Values.virtualservice.hostname | quote }}
+  selector:
+    matchLabels:
+       app: istio-ingressgateway
+  {{- end }}
+

@@ -138,15 +138,24 @@ controller:
       entrypoint: steps
       metrics:
         prometheus:
-          - name: exec_duration_gauge         # Metric name (will be prepended with "argo_workflows_")
-            labels:                           # Labels are optional. Avoid cardinality explosion.
+          - name: exec_duration_gauge
+            labels:
               - key: workflow_name
                 value: "{{workflow.name}}"
               - key: team_name
                 value: "{{workflow.namespace}}"
-            help: "Duration gauge by name"    # A help doc describing your metric. This is required.
-            gauge:                            # The metric type. Available are "gauge", "histogram", and "counter".
-              value: "{{workflow.duration}}"  #
+            help: "Duration gauge by name"
+            gauge:
+              value: "{{workflow.duration}}"
+          - name: exec_status
+            labels:
+              - key: workflow_name
+                value: "{{workflow.name}}"
+              - key: team_name
+                value: "{{workflow.namespace}}"
+            help: "Status gauge by name"
+            gauge:
+              value: "{{workflow.status}}"
 
   # -- Number of workflow workers
   workflowWorkers: # 32

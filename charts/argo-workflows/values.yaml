@@ -138,25 +138,17 @@ controller:
       entrypoint: steps
       metrics:
         prometheus:
-          - name: exec_duration_gauge
+          - name: duration_gauge
             labels:
               - key: workflow_name
                 value: "{{workflow.name}}"
               - key: team_name
                 value: "{{workflow.namespace}}"
+              - key: status
+                value: "{{status}}"
             help: "Duration gauge by name"
             gauge:
-              value: "{{workflow.duration}}"
-          - name: exec_status
-            labels:
-              - key: workflow_name
-                value: "{{workflow.name}}"
-              - key: team_name
-                value: "{{workflow.namespace}}"
-            help: "Status gauge by name"
-            gauge:
-              value: "{{workflow.status}}"
-
+                value: "{{workflow.duration}}"
   # -- Number of workflow workers
   workflowWorkers: # 32
   # -- Number of pod workers

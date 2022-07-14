@@ -135,7 +135,6 @@ controller:
       annotations:
         argo: workflows
     spec:
-      entrypoint: steps
       metrics:
         prometheus:
           - name: duration_gauge

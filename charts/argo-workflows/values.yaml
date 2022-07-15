@@ -131,23 +131,6 @@ controller:
   #  spec:
   #    ttlStrategy:
   #      secondsAfterCompletion: 84600
-    metadata:
-      annotations:
-        argo: workflows
-    spec:
-      metrics:
-        prometheus:
-          - name: duration_gauge
-            labels:
-              - key: workflow_name
-                value: "{{workflow.name}}"
-              - key: team_name
-                value: "{{workflow.namespace}}"
-              - key: status
-                value: "{{status}}"
-            help: "Duration gauge by name"
-            gauge:
-                value: "{{workflow.duration}}"
   # -- Number of workflow workers
   workflowWorkers: # 32
   # -- Number of pod workers

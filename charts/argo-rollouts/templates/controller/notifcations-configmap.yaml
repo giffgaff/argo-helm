@@ -10,14 +10,14 @@ data:
   {{- with .Values.notifications.notifiers }}
     {{- toYaml . | nindent 2 }}
   {{- end }}
-  template.rollout-completed: {{ toJson .Values.controller.notifications.templates.rolloutCompleted }}
-  template.rollout-updated: {{ toJson .Values.controller.notifications.templates.rolloutUpdated }}
-  template.rollout-aborted: {{ toJson .Values.controller.notifications.templates.rolloutAborted }}
-  template.analysis-run-error: {{ toJson .Values.controller.notifications.templates.analysisRunError }}
-  template.analysis-run-failed: {{ toJson .Values.controller.notifications.templates.analysisRunFailed }}
-  trigger.on-rollout-completed: {{ toJson .Values.controller.notifications.templates.triggerOnRolloutCompleted }}
-  trigger.on-rollout-updated: {{ toJson .Values.controller.notifications.templates.triggerOnRolloutUpdated }}
-  trigger.on-rollout-aborted: {{ toJson .Values.controller.notifications.templates.triggerOnRolloutAborted }}
-  trigger.on-analysis-run-error: {{ toJson .Values.controller.notifications.templates.triggerOnAnalysisRunError }}
-  trigger.on-analysis-run-failed: {{ toJson .Values.controller.notifications.templates.triggerOnAnalysisRunFailed }}
+  template.rollout-completed: {{ toJson .Values.notifications.templates.rolloutCompleted }}
+  template.rollout-updated: {{ toJson .Values.notifications.templates.rolloutUpdated }}
+  template.rollout-aborted: {{ toJson .Values.notifications.templates.rolloutAborted }}
+  template.analysis-run-error: {{ toJson .Values.notifications.templates.analysisRunError }}
+  template.analysis-run-failed: {{ toJson .Values.notifications.templates.analysisRunFailed }}
+  trigger.on-rollout-completed: {{ toJson .Values.notifications.triggers.triggerOnRolloutCompleted }}
+  trigger.on-rollout-updated: {{ toJson .Values.notifications.triggers.triggerOnRolloutUpdated }}
+  trigger.on-rollout-aborted: {{ toJson .Values.notifications.triggers.triggerOnRolloutAborted }}
+  trigger.on-analysis-run-error: {{ toJson .Values.notifications.triggers.triggerOnAnalysisRunError }}
+  trigger.on-analysis-run-failed: {{ toJson .Values.notifications.triggers.triggerOnAnalysisRunFailed }}
 {{- end }}

@@ -42,12 +42,18 @@ If dashboard is installed by `--set dashboard.enabled=true`, checkout the argo-r
 | apiVersionOverrides.ingress | string | `""` | String to override apiVersion of ingresses rendered by this helm chart |
 | clusterInstall | bool | `true` | `false` runs controller in namespaced mode (does not require cluster RBAC) |
 | crdAnnotations | object | `{}` | Annotations to be added to all CRDs |
+| extraObjects | list | `[]` | Additional manifests to deploy within the chart. A list of objects. |
 | fullnameOverride | string | `nil` | String to fully override "argo-rollouts.fullname" template |
 | imagePullSecrets | list | `[]` | Secrets with credentials to pull images from a private registry. Registry secret names as an array. |
 | installCRDs | bool | `true` | Install and upgrade CRDs |
 | keepCRDs | bool | `true` | Keep CRD's on helm uninstall |
 | kubeVersionOverride | string | `""` | Override the Kubernetes version, which is used to evaluate certain manifests |
 | nameOverride | string | `nil` | String to partially override "argo-rollouts.fullname" template |
+| notifications.notifiers | object | `{}` | Configures notification services |
+| notifications.secret.create | bool | `false` | Whether to create notifications secret |
+| notifications.secret.items | object | `{}` | Generic key:value pairs to be inserted into the notifications secret |
+| notifications.templates | object | `{}` | Notification templates |
+| notifications.triggers | object | `{}` | The trigger defines the condition when the notification should be sent |
 
 ### Controller
 
@@ -58,6 +64,7 @@ If dashboard is installed by `--set dashboard.enabled=true`, checkout the argo-r
 | controller.component | string | `"rollouts-controller"` | Value of label `app.kubernetes.io/component` |
 | controller.extraArgs | list | `[]` | Additional command line arguments to pass to rollouts-controller.  A list of flags. |
 | controller.extraContainers | list | `[]` | Literal yaml for extra containers to be added to controller deployment. |
+| controller.extraEnv | list | `[]` | Additional environment variables for rollouts-controller. A list of name/value maps. |
 | controller.image.pullPolicy | string | `"IfNotPresent"` | Image pull policy |
 | controller.image.registry | string | `"quay.io"` | Registry to use |
 | controller.image.repository | string | `"argoproj/argo-rollouts"` | Repository to use |
@@ -68,8 +75,14 @@ If dashboard is installed by `--set dashboard.enabled=true`, checkout the argo-r
 | controller.metrics.serviceMonitor.additionalLabels | object | `{}` | Labels to be added to the ServiceMonitor |
 | controller.metrics.serviceMonitor.enabled | bool | `false` | Enable a prometheus ServiceMonitor |
 | controller.nodeSelector | object | `{}` | [Node selector] |
+| controller.pdb.annotations | object | `{}` | Annotations to be added to controller [Pod Disruption Budget] |
+| controller.pdb.enabled | bool | `false` | Deploy a [Pod Disruption Budget] for the controller |
+| controller.pdb.labels | object | `{}` | Labels to be added to controller [Pod Disruption Budget] |
+| controller.pdb.maxUnavailable | string | `nil` | Maximum number / percentage of pods that may be made unavailable |
+| controller.pdb.minAvailable | string | `nil` | Minimum number / percentage of pods that should remain scheduled |
+| controller.priorityClassName | string | `""` | [priorityClassName] for the controller |
 | controller.readinessProbe | object | See [values.yaml] | Configure readiness [probe] for the controller |
-| controller.replicas | int | `1` | The number of controller pods to run |
+| controller.replicas | int | `2` | The number of controller pods to run |
 | controller.resources | object | `{}` | Resource limits and requests for the controller pods. |
 | controller.tolerations | list | `[]` | [Tolerations] for use with node taints |
 | podAnnotations | object | `{}` | Annotations to be added to the Rollout pods |
@@ -89,6 +102,7 @@ If dashboard is installed by `--set dashboard.enabled=true`, checkout the argo-r
 | dashboard.containerSecurityContext | object | `{}` | Security Context to set on container level |
 | dashboard.enabled | bool | `false` | Deploy dashboard server |
 | dashboard.extraArgs | list | `[]` | Additional command line arguments to pass to rollouts-dashboard. A list of flags. |
+| dashboard.extraEnv | list | `[]` | Additional environment variables for rollouts-dashboard. A list of name/value maps. |
 | dashboard.image.pullPolicy | string | `"IfNotPresent"` | Image pull policy |
 | dashboard.image.registry | string | `"quay.io"` | Registry to use |
 | dashboard.image.repository | string | `"argoproj/kubectl-argo-rollouts"` | Repository to use |
@@ -103,13 +117,22 @@ If dashboard is installed by `--set dashboard.enabled=true`, checkout the argo-r
 | dashboard.ingress.paths | list | `["/"]` | Dashboard ingress paths |
 | dashboard.ingress.tls | list | `[]` | Dashboard ingress tls |
 | dashboard.nodeSelector | object | `{}` | [Node selector] |
+| dashboard.pdb.annotations | object | `{}` | Annotations to be added to dashboard [Pod Disruption Budget] |
+| dashboard.pdb.enabled | bool | `false` | Deploy a [Pod Disruption Budget] for the dashboard |
+| dashboard.pdb.labels | object | `{}` | Labels to be added to dashboard [Pod Disruption Budget] |
+| dashboard.pdb.maxUnavailable | string | `nil` | Maximum number / percentage of pods that may be made unavailable |
+| dashboard.pdb.minAvailable | string | `nil` | Minimum number / percentage of pods that should remain scheduled |
 | dashboard.podSecurityContext | object | `{"runAsNonRoot":true}` | Security Context to set on pod level |
+| dashboard.priorityClassName | string | `""` | [priorityClassName] for the dashboard server |
+| dashboard.readonly | bool | `false` | Set cluster role to readonly |
+| dashboard.replicas | int | `1` | The number of dashboard pods to run |
 | dashboard.resources | object | `{}` | Resource limits and requests for the dashboard pods. |
 | dashboard.service.annotations | object | `{}` | Service annotations |
 | dashboard.service.externalIPs | list | `[]` | Dashboard service external IPs |
 | dashboard.service.labels | object | `{}` | Service labels |
 | dashboard.service.loadBalancerIP | string | `""` | LoadBalancer will get created with the IP specified in this field |
 | dashboard.service.loadBalancerSourceRanges | list | `[]` | Source IP ranges to allow access to service from |
+| dashboard.service.nodePort | int | `nil` | Service nodePort |
 | dashboard.service.port | int | `3100` | Service port |
 | dashboard.service.portName | string | `"dashboard"` | Service port name |
 | dashboard.service.targetPort | int | `3100` | Service target port |
@@ -147,4 +170,6 @@ Autogenerated from chart metadata using [helm-docs](https://github.com/norwoodj/
 [Node selector]: https://kubernetes.io/docs/user-guide/node-selection/
 [probe]: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
 [Tolerations]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-[values.yaml]: https://github.com/argoproj/argo-helm/blob/argo-rollouts-2.9.3/charts/argo-rollouts/values.yaml
+[priorityClassName]: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/
+[Pod Disruption Budget]: https://kubernetes.io/docs/concepts/workloads/pods/disruptions/#pod-disruption-budgets
+[values.yaml]: https://github.com/argoproj/argo-helm/blob/argo-rollouts-2.18.0/charts/argo-rollouts/values.yaml

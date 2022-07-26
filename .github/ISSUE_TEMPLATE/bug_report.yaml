@@ -21,10 +21,16 @@ body:
       - argo-events
       - argo-rollouts
       - argo-workflows
-      - argocd-applicationset
       - argocd-image-updater
-      - argocd-notifications
       - other
+  validations:
+    required: true
+
+- type: input
+  attributes:
+    label: Helm chart version
+    description: Version of the Helm chart this issue relates to
+    placeholder: e.g. 0.16.2
   validations:
     required: true
 

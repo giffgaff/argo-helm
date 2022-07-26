@@ -13,6 +13,7 @@ spec:
       app.kubernetes.io/component: {{ .Values.dashboard.component }}
   strategy:
     type: Recreate
+  replicas: {{ .Values.dashboard.replicas }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -38,6 +39,10 @@ spec:
         {{- with .Values.dashboard.extraArgs }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
+        {{- with .Values.dashboard.extraEnv }}
+        env:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
         name: argo-rollouts-dashboard
         ports:
         - containerPort: {{ .Values.dashboard.service.targetPort }}
@@ -59,5 +64,8 @@ spec:
       {{- if .Values.dashboard.affinity }}
       affinity:
         {{- toYaml .Values.dashboard.affinity | nindent 8 }}
+      {{- end }}
+      {{- with .Values.dashboard.priorityClassName }}
+      priorityClassName: {{ . }}
       {{- end }}
 {{- end }}

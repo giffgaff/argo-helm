@@ -339,7 +339,7 @@ notifications:
               {{end}}
               ]
             }]
-      rolloutUpdated: |
+    rolloutUpdated: |
       message: Rollout Started.
       slack:
         attachments: |
@@ -388,7 +388,7 @@ notifications:
               {{end}}
               ]
             }]
-      rolloutAborted: |
+    rolloutAborted: |
       message: Rollout Aborted.
       slack:
         attachments: |
@@ -409,7 +409,7 @@ notifications:
               }
               ]
             }]
-      analysisRunError: |
+    analysisRunError: |
       message: Rollout Failed, analysis run in error state.
       slack:
         attachments: |
@@ -439,7 +439,7 @@ notifications:
               {{end}}
               ]
             }]
-      analysisRunFailed: |
+    analysisRunFailed: |
       message: Rollout Failed, analysis run failed.
       slack:
         attachments: |

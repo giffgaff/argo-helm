@@ -6,6 +6,10 @@ virtualservice:
   gateways: [ "istio-system/https-gateway" ]
   hostname:
 
+authorizationpolicy:
+  enabled: true
+  whitelistIPs: []
+
 images:
   # -- imagePullPolicy to apply to all containers
   pullPolicy: Always

@@ -1,4 +1,4 @@
-{{- if and .Values.virtualservice.enabled .Values.server.enabled -}}
+{{- if and .Values.authorizationpolicy.enabled .Values.virtualservice.enabled  -}}
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
@@ -12,6 +12,9 @@ spec:
         remoteIpBlocks:
         - 167.98.102.254
         - 79.125.73.252
+        {{- range $IPs := .Values.authorizationpolicy.whitelistIPs }}
+        - {{ $IPs}}
+        {{- end }}
     to:
     - operation:
         hosts:

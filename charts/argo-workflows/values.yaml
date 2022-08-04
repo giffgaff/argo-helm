@@ -98,6 +98,7 @@ controller:
     servicePort: 8080
     # -- Service metrics port name
     servicePortName: metrics
+    metricRelabelings: []
   # -- the controller container's securityContext
   securityContext:
     readOnlyRootFilesystem: true

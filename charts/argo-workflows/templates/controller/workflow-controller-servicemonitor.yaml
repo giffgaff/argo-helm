@@ -18,6 +18,10 @@ spec:
       path: {{ .Values.controller.metricsConfig.path }}
       interval: 30s
   {{- end }}
+  {{- with .Values.controller.metricsConfig.metricRelabelings }}
+      metricRelabelings:
+        {{- toYaml . | nindent 6 }}
+  {{- end }}
   {{- if .Values.controller.telemetryConfig.enabled }}
     - port: telemetry
       path: {{ .Values.controller.telemetryConfig.path }}

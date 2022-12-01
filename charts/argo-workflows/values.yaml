@@ -11,11 +11,22 @@ authorizationpolicy:
   whitelistIPs: []
 
 images:
+  # -- Common tag for Argo Workflows images. Defaults to `.Chart.AppVersion`.
+  tag: ""
   # -- imagePullPolicy to apply to all containers
   pullPolicy: Always
   # -- Secrets with credentials to pull images from a private registry
   pullSecrets: []
   # - name: argo-pull-secret
+
+## Custom resource configuration
+crds:
+  # -- Install and upgrade CRDs
+  install: true
+  # -- Keep CRDs on chart uninstall
+  keep: true
+  # -- Annotations to be added to all CRDs
+  annotations: {}
 
 # -- Create clusterroles that extend existing clusterroles to interact with argo-cd crds
 ## Ref: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#aggregated-clusterroles
@@ -42,6 +53,8 @@ workflow:
   serviceAccount:
     # -- Specifies whether a service account should be created
     create: false
+    # -- Labels applied to created service account
+    labels: {}
     # -- Annotations applied to created service account
     annotations: {}
     # -- Service account which is used to run workflows
@@ -57,7 +70,7 @@ controller:
     registry: quay.io
     # -- Registry to use for the controller
     repository: argoproj/workflow-controller
-    # -- Overrides the image tag whose default is the chart appVersion.
+    # -- Image tag for the workflow controller. Defaults to `.Values.images.tag`.
     tag: ""
   # -- parallelism dictates how many workflows can be running at the same time
   parallelism:
@@ -71,6 +84,8 @@ controller:
   rbac:
     # -- Adds Role and RoleBinding for the controller.
     create: true
+    # -- Allows controller to get, list, and watch certain k8s secrets
+    secretWhitelist: []
 
   # -- Limits the maximum number of incomplete workflows in a namespace
   namespaceParallelism:
@@ -92,6 +107,12 @@ controller:
     path: /metrics
     # -- Port is the port where metrics are emitted
     port: 9090
+    # -- How often custom metrics are cleared from memory
+    metricsTTL: ""
+    # -- Flag that instructs prometheus to ignore metric emission errors.
+    ignoreErrors: false
+    # --  Flag that use a self-signed cert for TLS
+    secure: false
     # -- Container metrics port name
     portName: metrics
     # -- Service metrics port
@@ -152,6 +173,12 @@ controller:
     path: /telemetry
     # -- telemetry container port
     port: 8081
+    # -- How often custom metrics are cleared from memory
+    metricsTTL: ""
+    # -- Flag that instructs prometheus to ignore metric emission errors.
+    ignoreErrors: false
+    # --  Flag that use a self-signed cert for TLS
+    secure: false
     # -- telemetry service port
     servicePort: 8081
     # -- telemetry service port name
@@ -168,6 +195,8 @@ controller:
     create: true
     # -- Service account name
     name: ""
+    # -- Labels applied to created service account
+    labels: {}
     # -- Annotations applied to created service account
     annotations: {}
 
@@ -180,15 +209,6 @@ controller:
   workflowNamespaces:
     - default
 
-  # -- Specifies the container runtime interface to use (one of: `docker`, `kubelet`, `k8sapi`, `pns`, `emissary`)
-  ## Ref: https://argoproj.github.io/argo-workflows/workflow-executors/
-  containerRuntimeExecutor: emissary
-  # -- Specifies the executor to use. This has precedence over `controller.containerRuntimeExecutor`.
-  containerRuntimeExecutors: []
-    # - name: emissary
-    #   selector:
-    #     matchLabels:
-    #       workflows.argoproj.io/container-runtime-executor: emissary
   instanceID:
     # -- Configures the controller to filter workflow submissions
     # to only those which have a matching instanceID attribute.
@@ -259,6 +279,15 @@ controller:
   tolerations: []
   # -- Assign custom [affinity] rules
   affinity: {}
+
+  # -- Assign custom [TopologySpreadConstraints] rules to the workflow controller
+  ## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
+  ## If labelSelector is left out, it will default to the labelSelector configuration of the deployment
+  topologySpreadConstraints: []
+  # - maxSkew: 1
+  #   topologyKey: topology.kubernetes.io/zone
+  #   whenUnsatisfiable: DoNotSchedule
+
   # -- Leverage a PriorityClass to ensure your pods survive resource shortages.
   ## ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
   priorityClassName: ""
@@ -274,14 +303,20 @@ controller:
   # -- Extra containers to be added to the controller deployment
   extraContainers: []
 
+  # -- Workflow retention by number of workflows
+  retentionPolicy: {}
+  #  completed: 10
+  #  failed: 3
+  #  errored: 3
+
 # mainContainer adds default config for main container that could be overriden in workflows template
 mainContainer:
-  # -- imagePullPolicy to apply to Workflow main container
-  imagePullPolicy: Always
+  # -- imagePullPolicy to apply to Workflow main container. Defaults to `.Values.images.pullPolicy`.
+  imagePullPolicy: ""
   # -- Resource limits and requests for the Workflow main container
   resources: {}
   # -- Adds environment variables for the Workflow main container
-  env: {}
+  env: []
   # -- sets security context for the Workflow main container
   securityContext: {}
 
@@ -292,12 +327,14 @@ executor:
     registry: quay.io
     # -- Repository to use for the Workflow Executors
     repository: argoproj/argoexec
-    # -- Overrides the image tag whose default is the chart appVersion.
+    # -- Image tag for the workflow executor. Defaults to `.Values.images.tag`.
     tag: ""
+    # -- Image PullPolicy to use for the Workflow Executors. Defaults to `.Values.images.pullPolicy`.
+    pullPolicy: ""
   # -- Resource limits and requests for the Workflow Executors
   resources: {}
   # -- Adds environment variables for the executor.
-  env: {}
+  env: []
   # -- sets security context for the executor container
   securityContext: {}
 
@@ -314,7 +351,7 @@ server:
     registry: quay.io
     # -- Repository to use for the server
     repository: argoproj/argocli
-    # -- Overrides the image tag whose default is the chart appVersion.
+    # -- Image tag for the Argo Workflows server. Defaults to `.Values.images.tag`.
     tag: ""
   # -- optional map of annotations to be applied to the ui Deployment
   deploymentAnnotations: {}
@@ -351,6 +388,8 @@ server:
     create: true
     # -- Service account name
     name: ""
+    # -- Labels applied to created service account
+    labels: {}
     # -- Annotations applied to created service account
     annotations: {}
 
@@ -381,6 +420,14 @@ server:
 
   # -- Assign custom [affinity] rules
   affinity: {}
+
+  # -- Assign custom [TopologySpreadConstraints] rules to the argo server
+  ## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
+  ## If labelSelector is left out, it will default to the labelSelector configuration of the deployment
+  topologySpreadConstraints: []
+  # - maxSkew: 1
+  #   topologyKey: topology.kubernetes.io/zone
+  #   whenUnsatisfiable: DoNotSchedule
 
   # -- Leverage a PriorityClass to ensure your pods survive resource shortages
   ## ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
@@ -494,6 +541,32 @@ server:
   # -- Extra containers to be added to the server deployment
   extraContainers: []
 
+# -- Array of extra K8s manifests to deploy
+extraObjects: []
+  # - apiVersion: secrets-store.csi.x-k8s.io/v1
+  #   kind: SecretProviderClass
+  #   metadata:
+  #     name: argo-server-sso
+  #   spec:
+  #     provider: aws
+  #     parameters:
+  #       objects: |
+  #         - objectName: "argo/server/sso"
+  #           objectType: "secretsmanager"
+  #           jmesPath:
+  #               - path: "client_id"
+  #                 objectAlias: "client_id"
+  #               - path: "client_secret"
+  #                 objectAlias: "client_secret"
+  #     secretObjects:
+  #     - data:
+  #       - key: client_id
+  #         objectName: client_id
+  #       - key: client_secret
+  #         objectName: client_secret
+  #       secretName: argo-server-sso-secrets-store
+  #       type: Opaque
+
 # -- Influences the creation of the ConfigMap for the workflow-controller itself.
 useDefaultArtifactRepo: false
 # -- Use static credentials for S3 (eg. when not using AWS IRSA)
@@ -512,7 +585,8 @@ artifactRepository:
     secretKeySecret:
       # name: <releaseName>-minio
       key: secretkey
-    insecure: true
+    # insecure will disable TLS. Primarily used for minio installs not configured with TLS
+    insecure: false
     # bucket:
     # endpoint:
     # region:
@@ -536,3 +610,35 @@ artifactRepository:
   # serviceAccountKeySecret:
   # name: my-gcs-credentials
   # key: serviceAccountKey
+  # -- Store artifact in Azure Blob Storage
+  # @default -- `{}` (See [values.yaml])
+  azure: {}
+  # endpoint: https://mystorageaccountname.blob.core.windows.net
+  # container: my-container-name
+  # blob: path/in/container
+  ## accountKeySecret is a secret selector.
+  ## It references the k8s secret named 'my-azure-storage-credentials'.
+  ## This secret is expected to have have the key 'account-access-key',
+  ## containing the base64 encoded credentials to the storage account.
+  ## If a managed identity has been assigned to the machines running the
+  ## workflow (e.g., https://docs.microsoft.com/en-us/azure/aks/use-managed-identity)
+  ## then accountKeySecret is not needed, and useSDKCreds should be
+  ## set to true instead:
+  # useSDKCreds: true
+  # accountKeySecret:
+  #  name: my-azure-storage-credentials
+  #  key: account-access-key
+
+# -- The section of custom artifact repository.
+# Will be added to the config in case useDefaultArtifactRepo is set to false
+customArtifactRepository: {}
+# customArtifactRepository:
+#   archiveLogs: true
+#   artifactory:
+#     repoUrl: https://artifactory.example.com/raw
+#     usernameSecret:
+#       name: artifactory-creds
+#       key: username
+#     passwordSecret:
+#       name: artifactory-creds
+#       key: password

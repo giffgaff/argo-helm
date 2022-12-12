@@ -1,5 +1,7 @@
 secrets_db_username:
 secrets_db_password:
+sso_client_id:
+sso_client_secret:
 
 virtualservice:
   enabled: true

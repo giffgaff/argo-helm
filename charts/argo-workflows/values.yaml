@@ -516,11 +516,11 @@ server:
      issuer:
     # Name of a secret and a key in it to retrieve the app OIDC client ID from.
      clientId:
-       name: argo-server-sso
+       name: argo-sso-secret
        key:
     # Name of a secret and a key in it to retrieve the app OIDC client secret from.
      clientSecret:
-       name: argo-server-sso
+       name: argo-sso-secret
        key:
     # The OIDC redirect URL. Should be in the form <argo-root-url>/oauth2/callback.
      redirectUrl: https://argo/oauth2/callback

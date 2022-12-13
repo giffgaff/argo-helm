@@ -536,7 +536,7 @@ server:
     # Scopes requested from the SSO ID provider.  The 'groups' scope requests
     # group membership information, which is usually used for authorization
     # decisions.
-#     scopes:
+     scopes: []
 #     - groups
 
   # -- Extra containers to be added to the server deployment

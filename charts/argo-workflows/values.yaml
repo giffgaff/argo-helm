@@ -515,29 +515,29 @@ server:
     # All the values are required. SSO is activated by adding --auth-mode=sso
     # to the server command line.
     # The root URL of the OIDC identity provider.
-     issuer:
+    issuer:
     # Name of a secret and a key in it to retrieve the app OIDC client ID from.
-     clientId:
-       name: argo-sso-secret
-       key:
+    clientId:
+      name: argo-sso-secret
+      key:
     # Name of a secret and a key in it to retrieve the app OIDC client secret from.
-     clientSecret:
-       name: argo-sso-secret
-       key:
+    clientSecret:
+      name: argo-sso-secret
+      key:
     # The OIDC redirect URL. Should be in the form <argo-root-url>/oauth2/callback.
-     redirectUrl: https://argoworkflows.snd.gaff.systems/oauth2/callback
-     rbac:
-       enabled: false
+    redirectUrl: https://argoworkflows.snd.gaff.systems/oauth2/callback
+    rbac:
+      enabled: false
     # When present, restricts secrets the server can read to a given list.
     # You can use it to restrict the server to only be able to access the
     # service account token secrets that are associated with service accounts
     # used for authorization.
-       secretWhitelist: []
+      secretWhitelist: []
     # Scopes requested from the SSO ID provider.  The 'groups' scope requests
     # group membership information, which is usually used for authorization
     # decisions.
-     scopes:
-      - groups
+    scopes:
+     - groups
 
   # -- Extra containers to be added to the server deployment
   extraContainers: []

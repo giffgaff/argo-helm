@@ -511,7 +511,7 @@ server:
     enableEditing: true
 
   # -- SSO configuration when SSO is specified as a server auth mode.
-#  sso:
+  sso: {}
 #    # All the values are required. SSO is activated by adding --auth-mode=sso
 #    # to the server command line.
 #    # The root URL of the OIDC identity provider.

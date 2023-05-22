@@ -7,6 +7,9 @@ kind: ClusterRole
   {{- end }}
 metadata:
   name: {{ template "argo-workflows.server.fullname" . }}
+  {{- if .Values.singleNamespace }}
+  namespace: {{ .Release.Namespace | quote }}
+  {{- end }}
   labels:
     {{- include "argo-workflows.labels" (dict "context" . "component" .Values.server.name "name" .Values.server.name) | nindent 4 }}
 rules:
@@ -23,13 +26,18 @@ rules:
   - ""
   resources:
   - pods
-  - pods/exec
-  - pods/log
   verbs:
   - get
   - list
   - watch
   - delete
+- apiGroups:
+  - ""
+  resources:
+  - pods/log
+  verbs:
+  - get
+  - list
 {{- if .Values.server.sso }}
 - apiGroups:
   - ""

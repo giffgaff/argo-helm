@@ -46,6 +46,32 @@ Create chart name and version as used by the chart label.
 {{- end -}}
 
 {{/*
+Create kubernetes friendly chart version label for the controller.
+Examples:
+image.tag = v3.4.4
+output    = v3.4.4
+
+image.tag = v3.4.4@sha256:d06860f1394a94ac3ff8401126ef32ba28915aa6c3c982c7e607ea0b4dadb696
+output    = v3.4.4
+*/}}
+{{- define "argo-workflows.controller_chart_version_label" -}}
+{{- regexReplaceAll "[^a-zA-Z0-9-_.]+" (regexReplaceAll "@sha256:[a-f0-9]+" (default (include "argo-workflows.defaultTag" .) .Values.controller.image.tag) "") "" | trunc 63 | quote -}}
+{{- end -}}
+
+{{/*
+Create kubernetes friendly chart version label for the server.
+Examples:
+image.tag = v3.4.4
+output    = v3.4.4
+
+image.tag = v3.4.4@sha256:d06860f1394a94ac3ff8401126ef32ba28915aa6c3c982c7e607ea0b4dadb696
+output    = v3.4.4
+*/}}
+{{- define "argo-workflows.server_chart_version_label" -}}
+{{- regexReplaceAll "[^a-zA-Z0-9-_.]+" (regexReplaceAll "@sha256:[a-f0-9]+" (default (include "argo-workflows.defaultTag" .) .Values.server.image.tag) "") "" | trunc 63 | quote -}}
+{{- end -}}
+
+{{/*
 Common labels
 */}}
 {{- define "argo-workflows.labels" -}}
@@ -104,17 +130,6 @@ Return the appropriate apiVersion for ingress
 {{- end -}}
 
 {{/*
-Return the appropriate apiVersion for pod disruption budget
-*/}}
-{{- define "argo-workflows.podDisruptionBudget.apiVersion" -}}
-{{- if semverCompare "<1.21-0" (include "argo-workflows.kubeVersion" $) -}}
-{{- print "policy/v1beta1" -}}
-{{- else -}}
-{{- print "policy/v1" -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
 Return the target Kubernetes version
 */}}
 {{- define "argo-workflows.kubeVersion" -}}
@@ -126,4 +141,41 @@ Return the default Argo Workflows app version
 */}}
 {{- define "argo-workflows.defaultTag" -}}
   {{- default .Chart.AppVersion .Values.images.tag }}
+{{- end -}}
+
+{{/*
+Return full image name including or excluding registry based on existence
+*/}}
+{{- define "argo-workflows.image" -}}
+{{- if and .image.registry .image.repository -}}
+  {{ .image.registry }}/{{ .image.repository }}
+{{- else -}}
+  {{ .image.repository }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return the appropriate apiVersion for autoscaling
+*/}}
+{{- define "argo-workflows.apiVersion.autoscaling" -}}
+{{- if .Values.apiVersionOverrides.autoscaling -}}
+{{- print .Values.apiVersionOverrides.autoscaling -}}
+{{- else if semverCompare "<1.23-0" (include "argo-workflows.kubeVersion" .) -}}
+{{- print "autoscaling/v2beta1" -}}
+{{- else -}}
+{{- print "autoscaling/v2" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return the appropriate apiVersion for GKE resources
+*/}}
+{{- define "argo-workflows.apiVersions.cloudgoogle" -}}
+{{- if .Values.apiVersionOverrides.cloudgoogle -}}
+{{- print .Values.apiVersionOverrides.cloudgoogle -}}
+{{- else if .Capabilities.APIVersions.Has "cloud.google.com/v1" -}}
+{{- print "cloud.google.com/v1" -}}
+{{- else -}}
+{{- print "cloud.google.com/v1beta1" -}}
+{{- end -}}
 {{- end -}}

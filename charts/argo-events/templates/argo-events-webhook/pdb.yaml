@@ -1,8 +1,9 @@
 {{- if and .Values.webhook.enabled .Values.webhook.pdb.enabled (not .Values.controller.rbac.namespaced) }}
-apiVersion: policy/v1beta1
+apiVersion: {{ template "argo-events.pdb.apiVersion" . }}
 kind: PodDisruptionBudget
 metadata:
   name: {{ template "argo-events.webhook.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
   labels:
     {{- include "argo-events.labels" (dict "context" . "component" .Values.webhook.name "name" .Values.webhook.name) | nindent 4 }}
     {{- with .Values.webhook.pdb.labels }}

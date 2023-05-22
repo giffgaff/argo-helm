@@ -33,6 +33,10 @@ If dashboard is installed by `--set dashboard.enabled=true`, checkout the argo-r
 |:---------------------------------------------------------------------------|
 | The chart provides an option to change the service type (`dashboard.service.type`). Also it provides the ability to expose the dashboard via Ingress. Dashboard was never intended to be exposed as an administrative console -- it started out as a local view available via CLI. It should be protected by something (e.g. network access or even better an oauth proxy). |
 
+## Changelog
+
+For full list of changes please check ArtifactHub [changelog].
+
 ## Chart Values
 
 ### General parameters
@@ -55,6 +59,14 @@ If dashboard is installed by `--set dashboard.enabled=true`, checkout the argo-r
 | notifications.secret.items | object | `{}` | Generic key:value pairs to be inserted into the notifications secret |
 | notifications.templates | object | `{}` | Notification templates |
 | notifications.triggers | object | `{}` | The trigger defines the condition when the notification should be sent |
+| providerRBAC.enabled | bool | `true` | Toggles addition of provider-specific RBAC rules to the controller Role and ClusterRole |
+| providerRBAC.providers.ambassador | bool | `true` | Adds RBAC rules for the Ambassador provider |
+| providerRBAC.providers.apisix | bool | `true` | Adds RBAC rules for the Apisix provider |
+| providerRBAC.providers.awsAppMesh | bool | `true` | Adds RBAC rules for the AWS App Mesh provider |
+| providerRBAC.providers.awsLoadBalancerController | bool | `true` | Adds RBAC rules for the AWS Load Balancer Controller provider |
+| providerRBAC.providers.istio | bool | `true` | Adds RBAC rules for the Istio provider |
+| providerRBAC.providers.smi | bool | `true` | Adds RBAC rules for the SMI provider |
+| providerRBAC.providers.traefik | bool | `true` | Adds RBAC rules for the Traefik provider |
 
 ### Controller
 
@@ -63,6 +75,8 @@ If dashboard is installed by `--set dashboard.enabled=true`, checkout the argo-r
 | containerSecurityContext | object | `{}` | Security Context to set on container level |
 | controller.affinity | object | `{}` | Assign custom [affinity] rules to the deployment |
 | controller.component | string | `"rollouts-controller"` | Value of label `app.kubernetes.io/component` |
+| controller.containerPorts.healthz | int | `8080` | Healthz container port |
+| controller.containerPorts.metrics | int | `8090` | Metrics container port |
 | controller.createClusterRole | bool | `true` | flag to enable creation of cluster controller role (requires cluster RBAC) |
 | controller.extraArgs | list | `[]` | Additional command line arguments to pass to rollouts-controller.  A list of flags. |
 | controller.extraContainers | list | `[]` | Literal yaml for extra containers to be added to controller deployment. |
@@ -73,22 +87,31 @@ If dashboard is installed by `--set dashboard.enabled=true`, checkout the argo-r
 | controller.image.tag | string | `""` | Overrides the image tag (default is the chart appVersion) |
 | controller.initContainers | list | `[]` | Init containers to add to the rollouts controller pod |
 | controller.livenessProbe | object | See [values.yaml] | Configure liveness [probe] for the controller |
+| controller.metricProviderPlugins | object | `{}` | Configures 3rd party metric providers for controller |
 | controller.metrics.enabled | bool | `false` | Deploy metrics service |
+| controller.metrics.service.port | int | `8090` | Metrics service port |
+| controller.metrics.service.portName | string | `"metrics"` | Metrics service port name |
 | controller.metrics.serviceMonitor.additionalAnnotations | object | `{}` | Annotations to be added to the ServiceMonitor |
 | controller.metrics.serviceMonitor.additionalLabels | object | `{}` | Labels to be added to the ServiceMonitor |
 | controller.metrics.serviceMonitor.enabled | bool | `false` | Enable a prometheus ServiceMonitor |
+| controller.metrics.serviceMonitor.metricRelabelings | list | `[]` | MetricRelabelConfigs to apply to samples before ingestion |
+| controller.metrics.serviceMonitor.relabelings | list | `[]` | RelabelConfigs to apply to samples before scraping |
 | controller.nodeSelector | object | `{}` | [Node selector] |
 | controller.pdb.annotations | object | `{}` | Annotations to be added to controller [Pod Disruption Budget] |
 | controller.pdb.enabled | bool | `false` | Deploy a [Pod Disruption Budget] for the controller |
 | controller.pdb.labels | object | `{}` | Labels to be added to controller [Pod Disruption Budget] |
 | controller.pdb.maxUnavailable | string | `nil` | Maximum number / percentage of pods that may be made unavailable |
 | controller.pdb.minAvailable | string | `nil` | Minimum number / percentage of pods that should remain scheduled |
+| controller.podAnnotations | object | `{}` | Annotations to be added to application controller pods |
 | controller.priorityClassName | string | `""` | [priorityClassName] for the controller |
 | controller.readinessProbe | object | See [values.yaml] | Configure readiness [probe] for the controller |
 | controller.replicas | int | `2` | The number of controller pods to run |
 | controller.resources | object | `{}` | Resource limits and requests for the controller pods. |
 | controller.tolerations | list | `[]` | [Tolerations] for use with node taints |
-| podAnnotations | object | `{}` | Annotations to be added to the Rollout pods |
+| controller.topologySpreadConstraints | list | `[]` | Assign custom [TopologySpreadConstraints] rules to the controller |
+| controller.volumeMounts | list | `[]` | Additional volumeMounts to add to the controller container |
+| controller.volumes | list | `[]` | Additional volumes to add to the controller pod |
+| podAnnotations | object | `{}` | Annotations for the all deployed pods |
 | podLabels | object | `{}` | Labels to be added to the Rollout pods |
 | podSecurityContext | object | `{"runAsNonRoot":true}` | Security Context to set on pod level |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
@@ -126,6 +149,7 @@ If dashboard is installed by `--set dashboard.enabled=true`, checkout the argo-r
 | dashboard.pdb.labels | object | `{}` | Labels to be added to dashboard [Pod Disruption Budget] |
 | dashboard.pdb.maxUnavailable | string | `nil` | Maximum number / percentage of pods that may be made unavailable |
 | dashboard.pdb.minAvailable | string | `nil` | Minimum number / percentage of pods that should remain scheduled |
+| dashboard.podAnnotations | object | `{}` | Annotations to be added to application dashboard pods |
 | dashboard.podSecurityContext | object | `{"runAsNonRoot":true}` | Security Context to set on pod level |
 | dashboard.priorityClassName | string | `""` | [priorityClassName] for the dashboard server |
 | dashboard.readonly | bool | `false` | Set cluster role to readonly |
@@ -145,6 +169,9 @@ If dashboard is installed by `--set dashboard.enabled=true`, checkout the argo-r
 | dashboard.serviceAccount.create | bool | `true` | Specifies whether a dashboard service account should be created |
 | dashboard.serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
 | dashboard.tolerations | list | `[]` | [Tolerations] for use with node taints |
+| dashboard.topologySpreadConstraints | list | `[]` | Assign custom [TopologySpreadConstraints] rules to the dashboard server |
+| dashboard.volumeMounts | list | `[]` | Additional volumeMounts to add to the dashboard container |
+| dashboard.volumes | list | `[]` | Additional volumes to add to the dashboard pod |
 
 ## Upgrading
 
@@ -174,6 +201,8 @@ Autogenerated from chart metadata using [helm-docs](https://github.com/norwoodj/
 [Node selector]: https://kubernetes.io/docs/user-guide/node-selection/
 [probe]: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
 [Tolerations]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+[TopologySpreadConstraints]: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
 [priorityClassName]: https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/
 [Pod Disruption Budget]: https://kubernetes.io/docs/concepts/workloads/pods/disruptions/#pod-disruption-budgets
 [values.yaml]: values.yaml
+[changelog]: https://artifacthub.io/packages/helm/argo/argo-rollouts?modal=changelog

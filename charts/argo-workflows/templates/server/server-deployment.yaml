@@ -3,15 +3,18 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ template "argo-workflows.server.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
   labels:
     {{- include "argo-workflows.labels" (dict "context" . "component" .Values.server.name "name" .Values.server.name) | nindent 4 }}
-    app.kubernetes.io/version: {{ default (include "argo-workflows.defaultTag" .) .Values.server.image.tag | trunc 63 | quote }}
+    app.kubernetes.io/version: {{ include "argo-workflows.server_chart_version_label" . }}
   {{- with .Values.server.deploymentAnnotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
+  {{- if not .Values.server.autoscaling.enabled }}
   replicas: {{ .Values.server.replicas }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "argo-workflows.selectorLabels" (dict "context" . "name" .Values.server.name) | nindent 6 }}
@@ -19,7 +22,7 @@ spec:
     metadata:
       labels:
         {{- include "argo-workflows.labels" (dict "context" . "component" .Values.server.name "name" .Values.server.name) | nindent 8 }}
-        app.kubernetes.io/version: {{ default (include "argo-workflows.defaultTag" .) .Values.server.image.tag | trunc 63 | quote }}
+        app.kubernetes.io/version: {{ include "argo-workflows.server_chart_version_label" . }}
         {{- with .Values.server.podLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -33,9 +36,13 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with .Values.server.extraInitContainers }}
+      initContainers:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
       containers:
         - name: argo-server
-          image: "{{ .Values.server.image.registry }}/{{ .Values.server.image.repository }}:{{ default (include "argo-workflows.defaultTag" .) .Values.server.image.tag }}"
+          image: "{{- include "argo-workflows.image" (dict "context" . "image" .Values.server.image) }}:{{ default (include "argo-workflows.defaultTag" .) .Values.server.image.tag }}"
           imagePullPolicy: {{ .Values.images.pullPolicy }}
           securityContext:
             {{- toYaml .Values.server.securityContext | nindent 12 }}
@@ -49,6 +56,12 @@ spec:
           {{- if .Values.singleNamespace }}
           - "--namespaced"
           {{- end }}
+          - "--loglevel"
+          - "{{ .Values.server.logging.level }}"
+          - "--gloglevel"
+          - "{{ .Values.server.logging.globallevel }}"
+          - "--log-format"
+          - "{{ .Values.server.logging.format }}"
           ports:
           - name: web
             containerPort: 2746

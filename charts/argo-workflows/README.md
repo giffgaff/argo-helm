@@ -75,6 +75,11 @@ For full list of changes, please check ArtifactHub [changelog].
 
 ## Usage Notes
 
+### High Availability
+
+This chart installs the non-HA version of Argo Workflows by default. If you want to run in HA mode, you can use [these example values](ci/ha-values.yaml) as a starting point.
+Please see the upstream [Operator Manual's High Availability page](https://argoproj.github.io/argo-workflows/high-availability/) to understand how to scale Argo Workflows in depth.
+
 ### Workflow controller
 
 This chart defaults to setting the `controller.instanceID.enabled` to `false` now, which means the deployed controller will act upon any workflow deployed to the cluster. If you would like to limit the behavior and deploy multiple workflow controllers, please use the `controller.instanceID.enabled` attribute along with one of its configuration options to set the `instanceID` of the workflow controller to be properly scoped for your needs.
@@ -103,6 +108,7 @@ Fields to note:
 |-----|------|---------|-------------|
 | apiVersionOverrides.autoscaling | string | `""` | String to override apiVersion of autoscaling rendered by this helm chart |
 | apiVersionOverrides.cloudgoogle | string | `""` | String to override apiVersion of GKE resources rendered by this helm chart |
+| commonLabels | object | `{}` | Labels to set on all resources |
 | crds.annotations | object | `{}` | Annotations to be added to all CRDs |
 | crds.install | bool | `true` | Install and upgrade CRDs |
 | crds.keep | bool | `true` | Keep CRDs on chart uninstall |
@@ -127,6 +133,7 @@ Fields to note:
 | workflow.serviceAccount.create | bool | `false` | Specifies whether a service account should be created |
 | workflow.serviceAccount.labels | object | `{}` | Labels applied to created service account |
 | workflow.serviceAccount.name | string | `"argo-workflow"` | Service account which is used to run workflows |
+| workflow.serviceAccount.pullSecrets | list | `[]` | Secrets with credentials to pull images from a private registry. Same format as `.Values.images.pullSecrets` |
 
 ### Workflow Controller
 
@@ -134,6 +141,8 @@ Fields to note:
 |-----|------|---------|-------------|
 | controller.affinity | object | `{}` | Assign custom [affinity] rules |
 | controller.clusterWorkflowTemplates.enabled | bool | `true` | Create a ClusterRole and CRB for the controller to access ClusterWorkflowTemplates. |
+| controller.columns | list | `[]` | Configure Argo Server to show custom [columns] |
+| controller.cronWorkflowWorkers | string | `nil` | Number of cron workflow workers Only valid for 3.5+ |
 | controller.deploymentAnnotations | object | `{}` | deploymentAnnotations is an optional map of annotations to be applied to the controller Deployment |
 | controller.extraArgs | list | `[]` | Extra arguments to be added to the controller |
 | controller.extraContainers | list | `[]` | Extra containers to be added to the controller deployment |
@@ -174,6 +183,7 @@ Fields to note:
 | controller.pdb.enabled | bool | `false` | Configure [Pod Disruption Budget] for the controller pods |
 | controller.persistence | object | `{}` | enable persistence using postgres |
 | controller.podAnnotations | object | `{}` | podAnnotations is an optional map of annotations to be applied to the controller Pods |
+| controller.podCleanupWorkers | string | `nil` | Number of pod cleanup workers |
 | controller.podGCDeleteDelayDuration | string | `5s` (Argo Workflows default) | The duration in seconds before the pods in the GC queue get deleted. A zero value indicates that the pods will be deleted immediately. |
 | controller.podGCGracePeriodSeconds | string | `30` seconds (Kubernetes default) | Specifies the duration in seconds before a terminating pod is forcefully killed. A zero value indicates that the pod will be forcefully terminated immediately. |
 | controller.podLabels | object | `{}` | Optional labels to add to the controller pods |
@@ -213,6 +223,7 @@ Fields to note:
 | controller.workflowDefaults | object | `{}` | Default values that will apply to all Workflows from this controller, unless overridden on the Workflow-level. Only valid for 2.7+ |
 | controller.workflowNamespaces | list | `["default"]` | Specify all namespaces where this workflow controller instance will manage workflows. This controls where the service account and RBAC resources will be created. Only valid when singleNamespace is false. |
 | controller.workflowRestrictions | object | `{}` | Restricts the Workflows that the controller will process. Only valid for 2.9+ |
+| controller.workflowTTLWorkers | string | `nil` | Number of workflow TTL workers |
 | controller.workflowWorkers | string | `nil` | Number of workflow workers |
 
 ### Workflow Main Container
@@ -229,6 +240,7 @@ Fields to note:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| executor.args | list | `[]` | Passes arguments to the executor processes |
 | executor.env | list | `[]` | Adds environment variables for the executor. |
 | executor.image.pullPolicy | string | `""` | Image PullPolicy to use for the Workflow Executors. Defaults to `.Values.images.pullPolicy`. |
 | executor.image.registry | string | `"quay.io"` | Registry to use for the Workflow Executors |
@@ -248,6 +260,8 @@ Fields to note:
 | server.GKEmanagedCertificate.domains | list | `["argoworkflows.example.com"]` | Domains for the Google Managed Certificate |
 | server.GKEmanagedCertificate.enabled | bool | `false` | Enable ManagedCertificate custom resource for Google Kubernetes Engine. |
 | server.affinity | object | `{}` | Assign custom [affinity] rules |
+| server.authMode | string | `""` | Deprecated; use server.authModes instead. |
+| server.authModes | list | `[]` | A list of supported authentication modes. Available values are `server`, `client`, or `sso`. If you provide sso, please configure `.Values.server.sso` as well. |
 | server.autoscaling.behavior | object | `{}` | Configures the scaling behavior of the target in both Up and Down directions. This is only available on HPA apiVersion `autoscaling/v2beta2` and newer |
 | server.autoscaling.enabled | bool | `false` | Enable Horizontal Pod Autoscaler ([HPA]) for the Argo Server |
 | server.autoscaling.maxReplicas | int | `5` | Maximum number of replicas for the Argo Server [HPA] |
@@ -259,7 +273,7 @@ Fields to note:
 | server.clusterWorkflowTemplates.enabled | bool | `true` | Create a ClusterRole and CRB for the server to access ClusterWorkflowTemplates. |
 | server.deploymentAnnotations | object | `{}` | optional map of annotations to be applied to the ui Deployment |
 | server.enabled | bool | `true` | Deploy the Argo Server |
-| server.extraArgs | list | `[]` | Extra arguments to provide to the Argo server binary, such as for disabling authentication. |
+| server.extraArgs | list | `[]` | Extra arguments to provide to the Argo server binary. |
 | server.extraContainers | list | `[]` | Extra containers to be added to the server deployment |
 | server.extraEnv | list | `[]` | Extra environment variables to provide to the argo-server container |
 | server.extraInitContainers | list | `[]` | Enables init containers to be added to the server deployment |
@@ -302,7 +316,21 @@ Fields to note:
 | server.servicePort | int | `2746` | Service port for server |
 | server.servicePortName | string | `""` | Service port name |
 | server.serviceType | string | `"ClusterIP"` | Service type for server pods |
-| server.sso | object | `{}` | SSO configuration when SSO is specified as a server auth mode. |
+| server.sso.clientId.key | string | `"client-id"` | Key of secret to retrieve the app OIDC client ID |
+| server.sso.clientId.name | string | `"argo-server-sso"` | Name of secret to retrieve the app OIDC client ID |
+| server.sso.clientSecret.key | string | `"client-secret"` | Key of a secret to retrieve the app OIDC client secret |
+| server.sso.clientSecret.name | string | `"argo-server-sso"` | Name of a secret to retrieve the app OIDC client secret |
+| server.sso.customGroupClaimName | string | `""` | Override claim name for OIDC groups |
+| server.sso.enabled | bool | `false` | Create SSO configuration. If you set `true` , please also set `.Values.server.authMode` as `sso`. |
+| server.sso.insecureSkipVerify | bool | `false` | Skip TLS verification for the HTTP client |
+| server.sso.issuer | string | `"https://accounts.google.com"` | The root URL of the OIDC identity provider |
+| server.sso.issuerAlias | string | `""` | Alternate root URLs that can be included for some OIDC providers |
+| server.sso.rbac.enabled | bool | `true` | Adds ServiceAccount Policy to server (Cluster)Role. |
+| server.sso.rbac.secretWhitelist | list | `[]` | Whitelist to allow server to fetch Secrets |
+| server.sso.redirectUrl | string | `"https://argo/oauth2/callback"` |  |
+| server.sso.scopes | list | `[]` | Scopes requested from the SSO ID provider |
+| server.sso.sessionExpiry | string | `""` | Define how long your login is valid for (in hours) |
+| server.sso.userInfoPath | string | `""` | Specify the user info endpoint that contains the groups claim |
 | server.tolerations | list | `[]` | [Tolerations] for use with node taints |
 | server.topologySpreadConstraints | list | `[]` | Assign custom [TopologySpreadConstraints] rules to the argo server |
 | server.volumeMounts | list | `[]` | Additional volume mounts to the server main container. |
@@ -316,6 +344,7 @@ Fields to note:
 | artifactRepository.azure | object | `{}` (See [values.yaml]) | Store artifact in Azure Blob Storage |
 | artifactRepository.gcs | object | `{}` (See [values.yaml]) | Store artifact in a GCS object store |
 | artifactRepository.s3 | object | See [values.yaml] | Store artifact in a S3-compliant object store |
+| artifactRepositoryRef | object | `{}` (See [values.yaml]) | The section of [artifact repository ref](https://argoproj.github.io/argo-workflows/artifact-repository-ref/). Each map key is the name of configmap |
 | customArtifactRepository | object | `{}` | The section of custom artifact repository. Utilize a custom artifact repository that is not one of the current base ones (s3, gcs, azure) |
 | useStaticCredentials | bool | `true` | Use static credentials for S3 (eg. when not using AWS IRSA) |
 
@@ -343,6 +372,7 @@ Fields to note:
 [BackendConfigSpec]: https://cloud.google.com/kubernetes-engine/docs/concepts/backendconfig#backendconfigspec_v1beta1_cloudgooglecom
 [FrontendConfigSpec]: https://cloud.google.com/kubernetes-engine/docs/how-to/ingress-features#configuring_ingress_features_through_frontendconfig_parameters
 [links]: https://argoproj.github.io/argo-workflows/links/
+[columns]: https://github.com/argoproj/argo-workflows/pull/10693
 [Node selector]: https://kubernetes.io/docs/user-guide/node-selection/
 [Pod Disruption Budget]: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
 [probe]: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes

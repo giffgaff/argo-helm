@@ -1,10 +1,10 @@
 apiVersion: v2
-appVersion: v3.5.1
+appVersion: v3.5.6
 name: argo-workflows
 description: A Helm chart for Argo Workflows
 type: application
-version: 0.40.0
-icon: https://argoproj.github.io/argo-workflows/assets/logo.png
+version: 0.41.4
+icon: https://argo-workflows.readthedocs.io/en/stable/assets/logo.png
 home: https://github.com/argoproj/argo-helm
 sources:
   - https://github.com/argoproj/argo-workflows
@@ -16,5 +16,5 @@ annotations:
     fingerprint: 2B8F22F57260EFA67BE1C5824B11F800CD9D2252
     url: https://argoproj.github.io/argo-helm/pgp_keys.asc
   artifacthub.io/changes: |
-    - kind: fixed
-      description: Accept multi auth mode for server.
+    - kind: added
+      description: Added option to add service accounts to RoleBindings

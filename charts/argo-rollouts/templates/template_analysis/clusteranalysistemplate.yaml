@@ -17,7 +17,7 @@ spec:
     failureLimit: "{{`{{`}}args.failure-limit{{`}}`}}"
     provider:
       prometheus:
-        address: http://thanos-query-http.monitoring:10902
+        address: http://thanos-query.monitoring:9090
         query: |
           (sum(rate(istio_requests_total{reporter="destination", destination_service_name=~"{{`{{`}}args.service-name{{`}}`}}-canary", response_code=~"5.."}[{{`{{`}}args.query-interval{{`}}`}}]) > 0)
           / sum(rate(istio_requests_total{reporter="destination", destination_service_name=~"{{`{{`}}args.service-name{{`}}`}}-canary"}[{{`{{`}}args.query-interval{{`}}`}}])) > 0)*100 OR on() vector(0)
@@ -40,7 +40,7 @@ spec:
       failureLimit: "{{`{{`}}args.failure-limit{{`}}`}}"
       provider:
         prometheus:
-          address: http://thanos-query-http.monitoring:10902
+          address: http://thanos-query.monitoring:9090
           query: |
             (sum(rate(http_server_requests_seconds_count{app=~"{{`{{`}}args.service-name{{`}}`}}", status=~"5..",uri!~"(/manage/prometheus)", role="canary"}[{{`{{`}}args.query-interval{{`}}`}}])> 0) /
             sum(rate(http_server_requests_seconds_count{app=~"{{`{{`}}args.service-name{{`}}`}}",uri!~"(/manage/prometheus)",role="canary"}[{{`{{`}}args.query-interval{{`}}`}}])) >0)*100 OR on() vector(0)

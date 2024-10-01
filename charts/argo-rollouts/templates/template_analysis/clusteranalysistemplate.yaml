@@ -19,8 +19,8 @@ spec:
       prometheus:
         address: http://thanos-query.monitoring:9090
         query: |
-          (sum(rate(istio_requests_total{reporter="destination", destination_service_name=~"{{`{{`}}args.service-name{{`}}`}}-canary", response_code=~"5.."}[{{`{{`}}args.query-interval{{`}}`}}]) > 0)
-          / sum(rate(istio_requests_total{reporter="destination", destination_service_name=~"{{`{{`}}args.service-name{{`}}`}}-canary"}[{{`{{`}}args.query-interval{{`}}`}}])) > 0)*100 OR on() vector(0)
+          (sum(rate(istio_requests_total{reporter="destination", role="canary", destination_service_name=~"{{`{{`}}args.service-name{{`}}`}}", response_code=~"5.."}[{{`{{`}}args.query-interval{{`}}`}}]) > 0)
+          / sum(rate(istio_requests_total{reporter="destination", role="canary", destination_service_name=~"{{`{{`}}args.service-name{{`}}`}}"}[{{`{{`}}args.query-interval{{`}}`}}])) > 0)*100 OR on() vector(0)
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: ClusterAnalysisTemplate

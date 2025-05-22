@@ -120,6 +120,8 @@ controller:
     create: true
     # -- ConfigMap name
     name: ""
+    # -- ConfigMap annotations
+    annotations: {}
 
   # -- Limits the maximum number of incomplete workflows in a namespace
   namespaceParallelism:
@@ -139,6 +141,8 @@ controller:
     enabled: true
     # -- Path is the path where metrics are emitted. Must start with a "/".
     path: /metrics
+    # -- Frequency at which prometheus scrapes metrics
+    interval: 30s
     # -- Port is the port where metrics are emitted
     port: 9090
     # -- How often custom metrics are cleared from memory
@@ -155,6 +159,9 @@ controller:
     servicePortName: metrics
     # -- Flag to enable headless service
     headlessService: false
+    # -- When true, honorLabels preserves the metric’s labels when they collide with the target’s labels.
+    ## Ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#honorlabels
+    honorLabels: false
     # -- ServiceMonitor relabel configs to apply to samples before scraping
     ## Ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#relabelconfig
     relabelings: []
@@ -200,7 +207,7 @@ controller:
   workflowDefaults: {}
   #   spec:
   #     ttlStrategy:
-  #       secondsAfterCompletion: 84600
+  #       secondsAfterCompletion: 86400
   #     # Ref: https://argo-workflows.readthedocs.io/en/stable/artifact-repository-ref/
   #     artifactRepositoryRef:
   #       configMap: my-artifact-repository # default is "artifact-repositories"
@@ -227,6 +234,8 @@ controller:
     enabled: true
     # -- telemetry path
     path: /telemetry
+    # -- Frequency at which prometheus scrapes telemetry data
+    interval: 30s
     # -- telemetry container port
     port: 8081
     # -- How often custom metrics are cleared from memory
@@ -293,6 +302,8 @@ controller:
   serviceAnnotations: {}
   # -- Optional labels to add to the controller Service
   serviceLabels: {}
+  # -- The class of the load balancer implementation
+  loadBalancerClass: ""
   # -- Source ranges to allow access to service from. Only applies to service type `LoadBalancer`
   loadBalancerSourceRanges: []
 
@@ -504,6 +515,8 @@ server:
   serviceAnnotations: {}
   # -- Optional labels to add to the UI Service
   serviceLabels: {}
+  # -- The class of the load balancer implementation
+  loadBalancerClass: ""
   # -- Static IP address to assign to loadBalancer service type `LoadBalancer`
   loadBalancerIP: ""
   # -- Source ranges to allow access to service from. Only applies to service type `LoadBalancer`
@@ -744,6 +757,12 @@ server:
 
   # -- Enables init containers to be added to the server deployment
   extraInitContainers: []
+
+  # -- Specify postStart and preStop lifecycle hooks for server container
+  lifecycle: {}
+
+  # -- terminationGracePeriodSeconds for container lifecycle hook
+  terminationGracePeriodSeconds: 30
 
 # -- Array of extra K8s manifests to deploy
 extraObjects: []

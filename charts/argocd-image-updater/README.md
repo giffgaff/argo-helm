@@ -79,11 +79,15 @@ The `config.registries` value can be used exactly as it looks in the documentati
 | config.argocd.token | string | `""` | If specified, the secret with Argo CD API key will be created. |
 | config.disableKubeEvents | bool | `false` | Disable kubernetes events |
 | config.gitCommitMail | string | `""` | E-Mail address to use for Git commits |
+| config.gitCommitSignOff | bool | `false` | Enables sign off on commits |
+| config.gitCommitSigningKey | string | `""` | Path to public SSH key mounted in container, or GPG key ID used to sign commits |
+| config.gitCommitSigningMethod | string | `""` | Method used to sign Git commits. `openpgp` or `ssh` |
 | config.gitCommitTemplate | string | `""` | Changing the Git commit message |
 | config.gitCommitUser | string | `""` | Username to use for Git commits |
 | config.logLevel | string | `"info"` | Argo CD Image Update log level |
 | config.registries | list | `[]` | Argo CD Image Updater registries list configuration. More information [here](https://argocd-image-updater.readthedocs.io/en/stable/configuration/registries/) |
 | config.sshConfig | object | `{}` | Argo CD Image Updater ssh client parameter configuration. |
+| createClusterRoles | bool | `true` | Create cluster roles for cluster-wide installation. |
 | extraArgs | list | `[]` | Extra arguments for argocd-image-updater not defined in `config.argocd`. If a flag contains both key and value, they need to be split to a new entry |
 | extraEnv | list | `[]` | Extra environment variables for argocd-image-updater |
 | extraEnvFrom | list | `[]` | Extra envFrom to pass to argocd-image-updater |
@@ -114,7 +118,7 @@ The `config.registries` value can be used exactly as it looks in the documentati
 | rbac.enabled | bool | `true` | Enable RBAC creation |
 | replicaCount | int | `1` | Replica count for the deployment. It is not advised to run more than one replica. |
 | resources | object | `{}` | Pod memory and cpu resource settings for the deployment |
-| securityContext | object | `{}` | Security context settings for the deployment |
+| securityContext | object | See [values.yaml] | Security context settings for the deployment |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.labels | object | `{}` | Labels to add to the service account |

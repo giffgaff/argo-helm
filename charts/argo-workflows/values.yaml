@@ -243,7 +243,7 @@ controller:
     # -- Frequency at which prometheus scrapes telemetry data
     interval: 30s
     # -- telemetry container port
-    port: 9090
+    port: 8081
     # -- How often custom metrics are cleared from memory
     metricsTTL: ""
     # -- Flag that instructs prometheus to ignore metric emission errors.

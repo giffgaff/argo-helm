@@ -3,7 +3,7 @@ appVersion: v3.6.2
 name: argo-workflows
 description: A Helm chart for Argo Workflows
 type: application
-version: 0.45.1
+version: 0.45.2
 icon: https://argo-workflows.readthedocs.io/en/stable/assets/logo.png
 home: https://github.com/argoproj/argo-helm
 sources:

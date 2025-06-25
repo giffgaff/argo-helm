@@ -647,7 +647,7 @@ notifications:
 cluster_analysis_template: no
 
   # -- The subscriptions define the subscriptions to the triggers in a general way for all rollouts
-  subscriptions: []
+subscriptions: []
     # - recipients:
     #   - slack:<channel>
     #   triggers:

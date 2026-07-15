@@ -35,14 +35,11 @@ rules:
   - ""
   resources:
   - configmaps
+  - namespaces
   verbs:
   - get
   - watch
   - list
-  {{- if .Values.controller.rbac.writeConfigMaps }}
-  - create
-  - update
-  {{- end}}
 - apiGroups:
   - ""
   resources:
@@ -60,6 +57,7 @@ rules:
   - workflows/finalizers
   - workflowtasksets
   - workflowtasksets/finalizers
+  - workflowtasksets/status
   - workflowartifactgctasks
   verbs:
   - get
@@ -167,6 +165,15 @@ rules:
   - update
   - patch
   - delete
+{{- if .Values.controller.rbac.writeConfigMaps }}
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - update
+{{- end}}
 {{- if .Values.controller.rbac.accessAllSecrets }}
 - apiGroups:
   - ""

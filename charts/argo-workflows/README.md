@@ -2,23 +2,79 @@
 
 This is a **community maintained** chart. It is used to set up argo and its needed dependencies through one command. This is used in conjunction with [helm](https://github.com/kubernetes/helm).
 
-If you want your deployment of this helm chart to most closely match the [argo CLI](https://github.com/argoproj/argo-workflows), you should deploy it in the `kube-system` namespace.
+If you want your deployment of this helm chart to most closely match the [argo CLI](https://github.com/argoproj/argo-workflows), you should deploy it in the `argo` namespace.
 
 ## Pre-Requisites
 
 ### Custom resource definitions
 
+#### Full vs Minified CRDs
+
+By default, this chart installs the **minified CRDs** (which use `x-kubernetes-preserve-unknown-fields` to accept any fields).
+These are smaller in size but provide almost no validation.
+This is the default in upstream manifests.
+
+If you prefer to use the **full CRDs** with complete OpenAPI schemas (recommended for better validation and type safety), you can set:
+
+```bash
+--set crds.full=true
+```
+
+**Important:** Full CRDs are approximately 7.4MB total and will most likely need to be applied using Server Side Apply to avoid hitting size limits.
+When installing manually with kubectl, use:
+
+```bash
+kubectl apply --server-side --force-conflicts -k "https://github.com/argoproj/argo-workflows/manifests/base/crds/full?ref=v<argoVersion>"
+```
+
+Note: Helm 3 does not natively support Server Side Apply.
+If you encounter issues installing full CRDs via Helm (such as "Too long" errors), you have two options:
+
+**Option 1: Manual kubectl apply**
+
+1. Apply the CRDs manually using kubectl with `--server-side` as shown above
+2. Install the chart with `--set crds.install=false` to skip CRD installation
+
+**Option 2: Use ArgoCD with Server Side Apply**
+
+ArgoCD supports Server Side Apply for Helm charts. To enable it, set the sync option in your Application manifest:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argo-workflows
+spec:
+  syncPolicy:
+    syncOptions:
+    - ServerSideApply=true
+  source:
+    chart: argo-workflows
+    repoURL: https://argoproj.github.io/argo-helm
+    targetRevision: 0.xx.xx
+    helm:
+      values: |
+        crds:
+          full: true
+```
+
+#### Installing CRDs Outside the Chart
+
 Some users would prefer to install the CRDs _outside_ of the chart. You can disable the CRD installation of this chart by using `--set crds.install=false` when installing the chart.
 
 Helm cannot upgrade custom resource definitions in the `<chart>/crds` folder [by design](https://helm.sh/docs/chart_best_practices/custom_resource_definitions/#some-caveats-and-explanations). Starting with 3.4.0 (chart version 0.19.0), the CRDs have been moved to `<chart>/templates` to address this design decision.
 
-If you are using Argo Workflows chart version prior to 3.4.0 (chart version 0.19.0) or have elected to manage the Argo Workflows CRDs outside of the chart, please use `kubectl` to upgrade CRDs manually from [templates/crds](templates/crds/) folder or via the manifests from the upstream project repo:
+If you are using Argo Workflows chart version prior to 3.4.0 (chart version 0.19.0) or have elected to manage the Argo Workflows CRDs outside of the chart, please use `kubectl` to upgrade CRDs manually from [files/crds/full](files/crds/full/) or [files/crds/minimal](files/crds/minimal/) folders, or via the manifests from the upstream project repo:
 
 ```bash
-kubectl apply -k "https://github.com/argoproj/argo-workflows/manifests/base/crds/full?ref=<appVersion>"
+# For full CRDs (requires Server Side Apply due to size)
+kubectl apply --server-side --force-conflicts -k "https://github.com/argoproj/argo-workflows/manifests/base/crds/full?ref=<appVersion>"
 
-# Eg. version v3.3.9
-kubectl apply -k "https://github.com/argoproj/argo-workflows/manifests/base/crds/full?ref=v3.3.9"
+# Eg. version v3.7.3
+kubectl apply --server-side --force-conflicts -k "https://github.com/argoproj/argo-workflows/manifests/base/crds/full?ref=v3.7.3"
+
+# For minified CRDs (standard apply works fine)
+kubectl apply -k "https://github.com/argoproj/argo-workflows/manifests/base/crds/minimal?ref=<appVersion>"
 ```
 
 ### ServiceAccount for Workflow Spec
@@ -91,6 +147,61 @@ Please refer to [Argo Server Auth Mode] for more details.
 
 Argo Workflows server also supports SSO and you can enable it to configure `.Values.server.sso` and `.Values.server.authModes`. In order to manage access levels, you can optionally add RBAC to SSO. Please refer to [SSO RBAC] for more details.
 
+### Ingress Configuration
+
+Argo Workflows server can be exposed using Kubernetes Ingress or Gateway API HTTPRoute.
+
+#### Traditional Kubernetes Ingress
+
+See the `server.ingress` section in values.yaml for standard Ingress configuration.
+
+#### Gateway API HTTPRoute
+
+The Gateway API provides a modern, extensible way to configure ingress traffic routing. This chart supports HTTPRoute resources as an alternative to traditional Ingress.
+
+> **Note:**
+> Gateway API support is **EXPERIMENTAL**. Support depends on your Gateway controller implementation. Some controllers may require additional configuration (e.g., BackendTLSPolicy for HTTPS backends). Refer to [Gateway API implementations](https://gateway-api.sigs.k8s.io/implementations/) for controller-specific details.
+
+```yaml
+server:
+  httproute:
+    enabled: true
+    parentRefs:
+      - name: example-gateway
+        namespace: gateway-system
+        sectionName: https
+    hostnames:
+      - argoworkflows.example.com
+```
+
+##### Gateway API with TLS backend
+
+For HTTPS backends with Gateway API (when `server.secure: true`), you may need to configure BackendTLSPolicy (experimental, v1alpha3):
+
+> **Warning:**
+> BackendTLSPolicy is in **EXPERIMENTAL** status. Not all Gateway controllers support this resource (e.g., Cilium does not yet support it).
+
+```yaml
+server:
+  secure: true
+
+  httproute:
+    enabled: true
+    parentRefs:
+      - name: example-gateway
+        namespace: gateway-system
+
+  backendTLSPolicy:
+    enabled: true
+    targetRefs:
+      - group: ""
+        kind: Service
+        name: argo-workflows-server
+    validation:
+      hostname: argo-workflows-server.argo.svc.cluster.local
+      wellKnownCACertificates: System
+```
+
 ## Values
 
 The `values.yaml` contains items used to tweak a deployment of this chart.
@@ -114,6 +225,7 @@ Fields to note:
 | apiVersionOverrides.monitoring | string | `""` | String to override apiVersion of monitoring CRDs (ServiceMonitor) rendered by this helm chart |
 | commonLabels | object | `{}` | Labels to set on all resources |
 | crds.annotations | object | `{}` | Annotations to be added to all CRDs |
+| crds.full | bool | `false` | Use full CRDs with complete OpenAPI schemas. When false, uses minified CRDs with x-kubernetes-preserve-unknown-fields. Note: Full CRDs are ~7.4MB and may require Server Side Apply (kubectl apply --server-side). See README for details. |
 | crds.install | bool | `true` | Install and upgrade CRDs |
 | crds.keep | bool | `true` | Keep CRDs on chart uninstall |
 | createAggregateRoles | bool | `true` | Create ClusterRoles that extend existing ClusterRoles to interact with Argo Workflows CRDs. |
@@ -183,10 +295,12 @@ Fields to note:
 | controller.metricsConfig.interval | string | `"30s"` | Frequency at which prometheus scrapes metrics |
 | controller.metricsConfig.metricRelabelings | list | `[]` | ServiceMonitor metric relabel configs to apply to samples before ingestion |
 | controller.metricsConfig.metricsTTL | string | `""` | How often custom metrics are cleared from memory |
+| controller.metricsConfig.modifiers | object | `{}` | Manipulate the metrics created by the workflow controller |
 | controller.metricsConfig.path | string | `"/metrics"` | Path is the path where metrics are emitted. Must start with a "/". |
 | controller.metricsConfig.port | int | `9090` | Port is the port where metrics are emitted |
 | controller.metricsConfig.portName | string | `"metrics"` | Container metrics port name |
 | controller.metricsConfig.relabelings | list | `[]` | ServiceMonitor relabel configs to apply to samples before scraping |
+| controller.metricsConfig.scheme | string | `"http"` | serviceMonitor scheme |
 | controller.metricsConfig.secure | bool | `false` | Flag that use a self-signed cert for TLS |
 | controller.metricsConfig.servicePort | int | `8080` | Service metrics port |
 | controller.metricsConfig.servicePortName | string | `"metrics"` | Service metrics port name |
@@ -226,12 +340,14 @@ Fields to note:
 | controller.serviceMonitor.enabled | bool | `false` | Enable a prometheus ServiceMonitor |
 | controller.serviceMonitor.namespace | string | `""` | Prometheus ServiceMonitor namespace |
 | controller.serviceType | string | `"ClusterIP"` | Service type of the controller Service |
+| controller.synchronization | object | `{}` | enable Synchronization to use a database.  Postgres and MySQL (>= 5.7.8) are available. |
 | controller.telemetryConfig.enabled | bool | `false` | Enables prometheus telemetry server |
 | controller.telemetryConfig.ignoreErrors | bool | `false` | Flag that instructs prometheus to ignore metric emission errors. |
 | controller.telemetryConfig.interval | string | `"30s"` | Frequency at which prometheus scrapes telemetry data |
 | controller.telemetryConfig.metricsTTL | string | `""` | How often custom metrics are cleared from memory |
 | controller.telemetryConfig.path | string | `"/telemetry"` | telemetry path |
 | controller.telemetryConfig.port | int | `8081` | telemetry container port |
+| controller.telemetryConfig.scheme | string | `"http"` | telemetry serviceMonitor scheme to use |
 | controller.telemetryConfig.secure | bool | `false` | Flag that use a self-signed cert for TLS |
 | controller.telemetryConfig.servicePort | int | `8081` | telemetry service port |
 | controller.telemetryConfig.servicePortName | string | `"telemetry"` | telemetry service port name |
@@ -288,6 +404,11 @@ Fields to note:
 | server.autoscaling.minReplicas | int | `1` | Minimum number of replicas for the Argo Server [HPA] |
 | server.autoscaling.targetCPUUtilizationPercentage | int | `50` | Average CPU utilization percentage for the Argo Server [HPA] |
 | server.autoscaling.targetMemoryUtilizationPercentage | int | `50` | Average memory utilization percentage for the Argo Server [HPA] |
+| server.backendTLSPolicy.annotations | object | `{}` | Additional BackendTLSPolicy annotations |
+| server.backendTLSPolicy.enabled | bool | `false` | Enable BackendTLSPolicy resource for Argo Workflows server (Gateway API) |
+| server.backendTLSPolicy.labels | object | `{}` | Additional BackendTLSPolicy labels |
+| server.backendTLSPolicy.targetRefs | list | `[]` (See [values.yaml]) | Target references for the BackendTLSPolicy |
+| server.backendTLSPolicy.validation | object | `{}` (See [values.yaml]) | TLS validation configuration |
 | server.baseHref | string | `"/"` | Value for base href in index.html. Used if the server is running behind reverse proxy under subpath different from /. |
 | server.clusterWorkflowTemplates.enableEditing | bool | `true` | Give the server permissions to edit ClusterWorkflowTemplates. |
 | server.clusterWorkflowTemplates.enabled | bool | `true` | Create a ClusterRole and CRB for the server to access ClusterWorkflowTemplates. |
@@ -298,6 +419,12 @@ Fields to note:
 | server.extraEnv | list | `[]` | Extra environment variables to provide to the argo-server container |
 | server.extraInitContainers | list | `[]` | Enables init containers to be added to the server deployment |
 | server.hostAliases | list | `[]` | Mapping between IP and hostnames that will be injected as entries in the pod's hosts files |
+| server.httproute.annotations | object | `{}` | Additional HTTPRoute annotations |
+| server.httproute.enabled | bool | `false` | Enable HTTPRoute resource for Argo Workflows server (Gateway API) |
+| server.httproute.hostnames | list | `[]` (See [values.yaml]) | List of hostnames for the HTTPRoute |
+| server.httproute.labels | object | `{}` | Additional HTTPRoute labels |
+| server.httproute.parentRefs | list | `[]` (See [values.yaml]) | Gateway API parentRefs for the HTTPRoute |
+| server.httproute.rules | list | `[]` (See [values.yaml]) | HTTPRoute rules configuration |
 | server.image.registry | string | `"quay.io"` | Registry to use for the server |
 | server.image.repository | string | `"argoproj/argocli"` | Repository to use for the server |
 | server.image.tag | string | `""` | Image tag for the Argo Workflows server. Defaults to `.Values.images.tag`. |
@@ -347,6 +474,7 @@ Fields to note:
 | server.serviceNodePort | string | `nil` | Service node port |
 | server.servicePort | int | `2746` | Service port for server |
 | server.servicePortName | string | `""` | Service port name |
+| server.serviceTargetPort | int | `2746` | Service target port for server |
 | server.serviceType | string | `"ClusterIP"` | Service type for server pods |
 | server.sso.clientId.key | string | `"client-id"` | Key of secret to retrieve the app OIDC client ID |
 | server.sso.clientId.name | string | `"argo-server-sso"` | Name of secret to retrieve the app OIDC client ID |

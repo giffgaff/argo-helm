@@ -42,6 +42,13 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with .Values.server.dnsConfig }}
+      dnsConfig:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.server.dnsPolicy }}
+      dnsPolicy: {{ . }}
+      {{- end }}
       {{- with .Values.server.hostAliases }}
       hostAliases:
         {{- toYaml . | nindent 8 }}
@@ -119,6 +126,10 @@ spec:
             - name: ARGO_BASE_HREF
               value: {{ .Values.server.baseHref | quote }}
           {{- with .Values.server.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.server.envFrom }}
+          envFrom:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           resources:
